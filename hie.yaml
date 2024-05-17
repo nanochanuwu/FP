@@ -6,11 +6,11 @@ cradle:
     - path: "./exec/Main.lhs"
       component: "FP:exe:myprogram"
 
-    - path: "./exec/Paths_report.hs"
+    - path: "./exec/Paths_FP.hs"
       component: "FP:exe:myprogram"
 
     - path: "./test"
       component: "FP:test:simpletests"
     
-    - path: "./zz_haskellCode"
-      component:  'FP.zz_haskellCode'
+    # - path: "./zz_haskellCode"
+    #   component:  'FP.zz_haskellCode'
