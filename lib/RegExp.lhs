@@ -1,7 +1,7 @@
 \section{Regular Expressions}\label{sec:reg_exp}
 
 % definition of regular expression
-% \begin{definition}
+\begin{definition}
     Fix an alphabet $\Sigma$. Say that $R$ is \emph{regular expression} over $\Sigma$ if:
     \begin{enumerate}[(i)]
         \item $R=a$ for some $a\in\Sigma$;
@@ -11,7 +11,7 @@
         \item $R=R_1 \cdot R_2$, where $R_1,R_2$ are regular expressions,
         \item $R=(R_1)^*$, where $R_1$ is a regular expression.
     \end{enumerate}
-% \end{definition}
+\end{definition}
 
 \begin{code}
 
