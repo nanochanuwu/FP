@@ -39,3 +39,8 @@ evaluateNFA nfa sys = walkDFA (beginDFA nfa) sys `elem` finalDFA nfa where
     walkDFA state [] = state
     walkDFA state (s:ss) = walkDFA (transitionDFA nfa (state, s)) ss
 -}
+
+epsilonClosure :: (Eq a, Ord a) => NFA a b -> a -> [a]
+epsilonClosure nfa x = nub (closing [x]) where
+  closing [] = []
+  closing (y:ys) = [y] ++ transitionNFA nfa (y,Nothing) ++ closing ys
