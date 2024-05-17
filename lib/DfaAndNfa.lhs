@@ -25,7 +25,7 @@ data NFA state symbol = NFA
                     , alphabetNFA :: [symbol]
                     , transitionNFA :: (state, Maybe symbol) -> [state]
                     , beginNFA :: state
-                    , finalFNA :: [state]
+                    , finalNFA :: [state]
                     }
 
 -- Show instance for DFA
@@ -45,7 +45,7 @@ instance (Show state, Show symbol) => Show (NFA state symbol) where
                "  alphabetNFA = " ++ show (alphabetNFA nfa) ++ ",\n" ++
                "  transitionNFA = <function>,\n" ++
                "  beginNFA = " ++ show (beginNFA nfa) ++ ",\n" ++
-               "  finalFNA = " ++ show (finalFNA nfa) ++ "\n" ++
+               "  finalFNA = " ++ show (finalNFA nfa) ++ "\n" ++
                "}"
 
 
@@ -59,12 +59,24 @@ evaluateDFA dfa sys = walkDFA (beginDFA dfa) sys `elem` finalDFA dfa where
     walkDFA state [] = state
     walkDFA state (s:ss) = walkDFA (transitionDFA dfa (state, s)) ss
 
-{-
-evaluateNFA :: Eq a => DFA a b -> [b] -> Bool
-evaluateNFA nfa sys = walkDFA (beginDFA nfa) sys `elem` finalDFA nfa where
-    walkDFA state [] = state
-    walkDFA state (s:ss) = walkDFA (transitionDFA nfa (state, s)) ss
--}
+
+evaluateNFA :: Eq a => NFA a b -> [b] -> Bool
+evaluateNFA nfa sys =  any (\s -> s `elem` finalNFA nfa) (walkNFA [beginNFA nfa] sys ) where
+    delta = transitionNFA nfa
+    walkNFA states []     = transition' delta Nothing states
+    walkNFA states (c:cs) = walkNFA (transition' delta (Just c) states) cs 
+
+
+-- Apply Non-determ transition function (including epsilons) to a colletion of states:
+transition' :: Eq state 
+                => ((state, Maybe symbol) -> [state])                       -- Transition function 
+                -> Maybe symbol                                             -- Symbol (or epsilon) to read
+                -> [state]                                                  -- Current states
+                -> [state]                                                  -- Reached states
+transition' _ _ []                    = []
+transition' delta mc (state : states) = delta (state, Nothing)  `union`   delta (state, mc)   `union`    transition' delta mc states 
+
+
 
 epsilonClosure :: (Eq a, Ord a) => NFA a b -> a -> [a]
 epsilonClosure nfa x = sort $ closing [] [x] where
