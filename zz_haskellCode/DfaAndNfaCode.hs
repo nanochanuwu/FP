@@ -4,12 +4,12 @@ data DFA a b = DFA  { statesDFA :: [a]
                     , alphabetDFA :: [b]
                     , transitionDFA :: (a,b) -> a
                     , beginDFA :: a
-                    , finalDFA :: a
-                }
+                    , finalDFA :: [a]
+                    }
 
 data NFA a b = NFA  { statesNFA :: [a]
                     , alphabetNFA :: [b]
                     , transitionNFA :: (a,b) -> [a]
                     , beginNFA :: a
-                    , finalFNA :: a
+                    , finalNFA :: [a]
                     }
