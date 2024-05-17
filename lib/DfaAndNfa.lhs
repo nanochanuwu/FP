@@ -1,9 +1,14 @@
-module Dfa.Nfa where
+\section{DFAs and NFAs}\label{sec:dfa_nfa}
+
+\begin{code}
+
+module DfaAndNfa where
 
 import Data.Function
 import Data.List
 import Data.Maybe
 import Control.Monad
+
 
 
 data DFA state symbol = DFA
@@ -67,3 +72,4 @@ epsilonClosure nfa x = sort $ closing [] [x] where
   closing visited (y:ys)
     | y `elem` visited = closing visited ys
     | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
+\end{code}

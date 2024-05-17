@@ -1,4 +1,3 @@
-
 \section{Regular Expressions}\label{sec:reg_exp}
 
 % definition of regular expression
@@ -15,6 +14,7 @@
 % \end{definition}
 
 \begin{code}
+
 module RegExp where
 
 data RegExp sym = Empty
