@@ -1,7 +1,7 @@
-name: report
+name: FP
 version: 0.1.0.0
 synopsis: My Haskell project
-description: See report.pdf
+description: See FP.pdf
 maintainer: My Name <my.email@example.com>
 category: Logic
 
@@ -20,13 +20,13 @@ executables:
     main: Main.lhs
     source-dirs: exec
     dependencies:
-      - report
+      - FP
 
 tests:
   simpletests:
     main: simpletests.lhs
     source-dirs: test
     dependencies:
-      - report
+      - FP
       - QuickCheck
       - hspec
