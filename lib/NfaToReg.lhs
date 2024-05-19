@@ -38,8 +38,6 @@ r :: (Eq state, Num state)
     -> RegExp symbol                                             -- Reg-Ex for all label-paths
 
 -- R^{0} ij          =  a_{1} | ... | a_{m}         q_{j} in  Δ(q_{i}, a_{1}) ∪ ... ∪ Δ(q_{i}, a_{m})
-
-     -- GENERALIZE HERE
 r delta labels 0 i j = labelsToReg (labelsFromTo delta labels i j)
 
 --  R^{k} ij         = R^{k-1} ik               (R^{k-1} kk)*                   R^{k-1} kj       |               R^{k-1} ij
@@ -51,20 +49,13 @@ r delta labels k i j = r' (k-1) i k  `Concat`   Star(r' (k-1) k k)  `Concat`    
 -- Converts an NFA to an equivalent Reg-Exp
 -- using kleene's algorithm.
 
--- PROBLEM: ONLY WORKS FOR state = Int
--- REASON: This is because we preform
---         induction on the size of the maximum/largest state
---         in the NFA we are converting.
--- NEED:   state to be able to:
---          a) Convert to Int (so we may preform induction on state)
---             as well as get the "maximum" state.
-
---       ONLY WORKS FOR state = Int
-nfaToReg :: NFA Int symbol                                      -- NFA to convert
+-- NOTE: MAY NOT have right behvaiour for
+-- state != Int
+nfaToReg :: (Num state, Ord state)
+         => NFA state symbol                                      -- NFA to convert
          -> RegExp symbol                                       -- Equivalent Reg-Ex
 nfaToReg (NFA states labels delta start finals) = foldr (\f1 regExp -> r' n start f1  `Or` regExp) Empty finals   
                 where r' = r delta labels
-                      -- GENERALIZE HERE
                       n  = maximum states
  
 
