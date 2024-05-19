@@ -77,6 +77,20 @@ transition' _ _ []                    = []
 transition' delta mc (state : states) = delta (state, Nothing)  `union`   delta (state, mc)   `union`    transition' delta mc states 
 
 
+-- Get collection of labels in a NFA from a given origin state
+-- to a destination state.
+labelsFromTo :: (Eq state) 
+            =>  ((state, Maybe symbol) -> [state])                          -- Transition function
+            -> [symbol]                                                     -- Alphabet
+            ->  state                                                       -- Origin state
+            ->  state                                                       -- Destination state
+            ->  [Maybe symbol]                                              -- Collection of labels
+labelsFromTo delta labels o d = [label | label <- labels', 
+                                         d `elem` delta (o, label)] 
+                        where
+                         -- labels' = lables ∪ {ε}
+                            labels' = fmap Just labels ++ [Nothing]
+
 
 epsilonClosure :: (Eq a, Ord a) => NFA a b -> a -> [a]
 epsilonClosure nfa x = sort $ closing [] [x] where
