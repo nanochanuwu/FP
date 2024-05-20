@@ -8,6 +8,8 @@ This should give us a list of lists containing for each element of the powerset 
 module NfaToDfa where
 
 import DfaAndNfa
+import Data.Maybe ( fromMaybe )
+import Data.List ( intersect, nub, sort )
 
 printDFA :: (Show state, Show symbol) => DFA state symbol -> String
 printDFA (DFA states alphabet transition begin final) =
