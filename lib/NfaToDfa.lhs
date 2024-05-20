@@ -7,53 +7,7 @@ This should give us a list of lists containing for each element of the powerset 
 
 module NfaToDfa where
 
-import Data.Function
-import Data.List
-import Data.Maybe
-import Control.Monad
-
-data DFA state symbol = DFA
-                    { statesDFA :: [state]
-                    , alphabetDFA :: [symbol]
-                    , transitionDFA :: (state,symbol) -> state
-                    , beginDFA :: state
-                    , finalDFA :: [state]
-                    }
-
-
-data NFA state symbol = NFA
-                    { statesNFA :: [state]
-                    , alphabetNFA :: [symbol]
-                    , transitionNFA :: (state, Maybe symbol) -> [state]
-                    , beginNFA :: state
-                    , finalFNA :: [state]
-                    }
-
-
-testDFA :: DFA Integer Char
-testDFA = DFA [1,2] "ab" (\(st,sy) -> fromMaybe (beginDFA testDFA) $ lookup (st,sy) [((1,  'a'), 1), ((1, 'b'), 2)])  1 [2]
-testNFA :: NFA Integer Char
-testNFA = NFA [1,2,3,4,5] "ab" (\(st,sy) -> fromMaybe [] $ lookup (st,sy) [((1, Just 'a'), [1]), ((1, Just 'b'), [1,2,5]), ((1, Nothing), [2]), ((2, Just 'a'), [2,4]), ((2,Just 'b'), [2]), ((3, Just 'a'), [2])])  1 [2]
-
-evaluateDFA :: Eq a => DFA a b -> [b] -> Bool
-evaluateDFA dfa sys = walkDFA (beginDFA dfa) sys `elem` finalDFA dfa where
-    walkDFA state [] = state
-    walkDFA state (s:ss) = walkDFA (transitionDFA dfa (state, s)) ss
-
-{-
-evaluateNFA :: Eq a => DFA a b -> [b] -> Bool
-evaluateNFA nfa sys = walkDFA (beginDFA nfa) sys `elem` finalDFA nfa where
-    walkDFA state [] = state
-    walkDFA state (s:ss) = walkDFA (transitionDFA nfa (state, s)) ss
--}
-
-epsilonClosure :: (Eq a, Ord a) => NFA a b -> a -> [a]
-epsilonClosure nfa x = sort $ closing [] [x] where
-  closing visited [] = visited
-  closing visited (y:ys)
-    | y `elem` visited = closing visited ys
-    | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
-
+import DfaAndNfa
 
 printDFA :: (Show state, Show symbol) => DFA state symbol -> String
 printDFA (DFA states alphabet transition begin final) =
