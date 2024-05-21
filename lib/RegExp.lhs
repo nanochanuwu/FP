@@ -35,7 +35,7 @@ data RegExp sym = Empty
                 | Or (RegExp sym) (RegExp sym)
                 | Concat (RegExp sym) (RegExp sym)
                 | Star (RegExp sym)
-                deriving Eq
+                deriving (Eq,Show)
 
 oneOrMore :: RegExp sym -> RegExp sym
 oneOrMore re = re `Concat` Star re
@@ -76,24 +76,29 @@ matches str re = case re of
 
 \begin{code}
 simplify :: Eq sym => RegExp sym -> RegExp sym
-simplify Empty = Empty
-simplify Epsilon = Epsilon
-simplify (Literal l) = Literal l
-simplify (Or re1 re2) 
-    | re1 == Empty = re2
-    | re2 == Empty = re1
-    | otherwise = Or (simplify re1) (simplify re2)
-simplify (Concat re1 re2) 
-    | re1 == Empty || re2 == Empty = Empty
-    | re1 == Epsilon = re2
-    | re2 == Epsilon = re1
-    | otherwise = Concat (simplify re1) (simplify re2)
-simplify (Star re) = case re of
-    Empty -> Epsilon
-    Epsilon -> Epsilon
-    Or Epsilon re2 -> Star (simplify re2)
-    Or re1 Epsilon -> Star (simplify re1)
-    _ -> Star (simplify re)
+simplify re -- repetedly apply the one-step simplification function until a fixed point is reached
+    | oneStepSimplify re == re = re
+    | otherwise = simplify $ oneStepSimplify re
+    where 
+        oneStepSimplify Empty = Empty
+        oneStepSimplify Epsilon = Epsilon
+        oneStepSimplify (Literal l) = Literal l
+        oneStepSimplify (Or re1 re2) 
+            | re1 == Empty = re2
+            | re2 == Empty = re1
+            | re1 == re2 = oneStepSimplify re1
+            | otherwise = Or (oneStepSimplify re1) (oneStepSimplify re2)
+        oneStepSimplify (Concat re1 re2) 
+            | re1 == Empty || re2 == Empty = Empty
+            | re1 == Epsilon = re2
+            | re2 == Epsilon = re1
+            | otherwise = Concat (oneStepSimplify re1) (oneStepSimplify re2)
+        oneStepSimplify (Star re') = case re' of
+            Empty -> Epsilon
+            Epsilon -> Epsilon
+            Or Epsilon re2 -> Star (oneStepSimplify re2)
+            Or re1 Epsilon -> Star (oneStepSimplify re1)
+            _ -> Star (oneStepSimplify re)
 \end{code}
 
 Finally, we implement a way to generate random regular expressions using QuickCheck. 
