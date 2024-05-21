@@ -21,7 +21,7 @@ printDFA (DFA states alphabet transition begin final) =
   where
     showTransition ((state, sym), nextState) =
         show state ++ " -- " ++ show sym ++ " --> " ++ show nextState
-    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- alphabet]
+    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- alphabet ]
 
 printNFA :: (Show state, Show symbol) => NFA state symbol -> String
 printNFA (NFA states alphabet transition begin final) =
@@ -35,7 +35,7 @@ printNFA (NFA states alphabet transition begin final) =
         show state ++ " -- " ++ "eps" ++ " --> " ++ show nextStates
     showTransition ((state, Just sym), nextStates) =
         show state ++ " -- " ++ show sym ++ " --> " ++ show nextStates
-    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- Nothing : map Just alphabet]
+    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- Nothing : map Just alphabet, not $ null $ transition (state,sym)]
 
 powerSetList :: [a] -> [[a]]
 powerSetList [] = [[]]
