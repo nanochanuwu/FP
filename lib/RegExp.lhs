@@ -17,7 +17,7 @@ It is also often useful to use the abbreviation $R^+ := R \cup R^*$.
 The following data type definition implements the \texttt{RegExp} type by closely following its formal definition.
 Together with the binary union (\texttt{Or}) and concatenation (\texttt{Concat}) operators, we also define their $n$-ary versions for convenience.
 Finally, we implement a function for displaying regular expressions in a more readable format\footnote{
-    This technically operates under the assumption that the alphabet does not contain \texttt{*} or \texttt{+} together with parentheses symbols,
+    This technically operates under the assumption that the alphabet does not contain \texttt{*} or \texttt{+} or the parentheses symbols,
     which would make the \texttt{prettyPrint} output ambiguous. Since the only purpose of this function is to display regular expressions in a readable format,
     however, we choose to simply ignore the issue.}.
 
@@ -35,14 +35,16 @@ data RegExp sym = Empty
                 | Or (RegExp sym) (RegExp sym)
                 | Concat (RegExp sym) (RegExp sym)
                 | Star (RegExp sym)
-                | OneOrMore (RegExp sym)                -- abbreviation for +
                 deriving Eq
+
+oneOrMore :: RegExp sym -> RegExp sym
+oneOrMore re = re `Concat` Star re
 
 orAll :: [RegExp sym] -> RegExp sym
 orAll = foldr Or Empty
 
 concatAll :: [RegExp sym] -> RegExp sym 
-concatAll = foldr Concat Empty
+concatAll = foldr Concat Epsilon
 
 prettyPrint :: Show sym => RegExp sym -> String
 prettyPrint re = case re of
@@ -52,7 +54,6 @@ prettyPrint re = case re of
     Or re1 re2 -> "(" ++ prettyPrint re1 ++ "|" ++ prettyPrint re2 ++ ")"
     Concat re1 re2 -> prettyPrint re1 ++ prettyPrint re2
     Star re1 -> "(" ++ prettyPrint re1 ++ ")*"
-    OneOrMore re1 -> "(" ++ prettyPrint re1 ++ ")+"
 \end{code}
 
 % matching
@@ -68,7 +69,6 @@ matches str re = case re of
         allSplittings s = [ splitAt k s | k <- [0..n] ] where n = length s
     Star re1 -> matches str Epsilon || or [ matches str1 re1 && matches str2 re1 | (str1, str2) <- allNonEmptySplittings str ] where 
         allNonEmptySplittings s = [ splitAt k s | k <- [1..n] ] where n = length s 
-    OneOrMore re1 -> not $ matches str Epsilon && matches str (Star re1)
 \end{code}
 
 % algebra of regular expressions. maybe insert explanations in-between code blocks?
@@ -87,8 +87,6 @@ simplify (Concat re1 re2)
     | re1 == Empty || re2 == Empty = Empty
     | re1 == Epsilon = re2
     | re2 == Epsilon = re1
-    | re1 == Star re2 = OneOrMore (simplify re2)
-    | re2 == Star re1 = OneOrMore (simplify re1)
     | otherwise = Concat (simplify re1) (simplify re2)
 simplify (Star re) = case re of
     Empty -> Epsilon
@@ -96,12 +94,6 @@ simplify (Star re) = case re of
     Or Epsilon re2 -> Star (simplify re2)
     Or re1 Epsilon -> Star (simplify re1)
     _ -> Star (simplify re)
-simplify (OneOrMore re) = case re of
-    Empty -> Empty
-    Epsilon -> Epsilon
-    Or Epsilon re2 -> Star (simplify re2)
-    Or re1 Epsilon -> Star (simplify re1)
-    _ -> OneOrMore (simplify re)
 \end{code}
 
 Finally, we implement a way to generate random regular expressions using QuickCheck. 
@@ -116,6 +108,5 @@ instance Arbitrary sym => Arbitrary (RegExp sym) where
                         , Or <$> randomRegExp (n `div` 2) <*> randomRegExp (n `div` 2)
                         , Concat <$> randomRegExp (n `div` 2) <*> randomRegExp (n `div` 2)
                         , Star <$> randomRegExp (n `div` 2)
-                        , OneOrMore <$> randomRegExp (n `div` 2)
                         ]
 \end{code}
