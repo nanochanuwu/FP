@@ -84,13 +84,20 @@ simplify re -- repetedly apply the one-step simplification function until a fixe
         oneStepSimplify Epsilon = Epsilon
         oneStepSimplify (Literal l) = Literal l
         oneStepSimplify (Or re1 re2) 
+                            -- Q: Still need to simplify re2?
             | re1 == Empty = re2
+            
+                            -- Q: Still need to simplify re1?
             | re2 == Empty = re1
             | re1 == re2 = oneStepSimplify re1
             | otherwise = Or (oneStepSimplify re1) (oneStepSimplify re2)
         oneStepSimplify (Concat re1 re2) 
             | re1 == Empty || re2 == Empty = Empty
+            
+                            -- Q: Still need to simplify re2?
             | re1 == Epsilon = re2
+            
+                            -- Q: Still need to simplify re1?
             | re2 == Epsilon = re1
             | otherwise = Concat (oneStepSimplify re1) (oneStepSimplify re2)
         oneStepSimplify (Star re') = case re' of

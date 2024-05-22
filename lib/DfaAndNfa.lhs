@@ -8,12 +8,14 @@
 module DfaAndNfa where
 
 import Test.QuickCheck
-import Data.List ( sort )
+import Data.List ( sort, union )
 import Data.Maybe ( fromMaybe )
 
 data DFA state symbol = DFA
                     { statesDFA :: [state]
                     , alphabetDFA :: [symbol]
+                                                        -- Nothing : state is our "garbage" state.
+                                                        -- Reject all strings the moment they reach Nothing : state.
                     , transitionDFA :: (state,symbol) -> Maybe state
                     , beginDFA :: state
                     , finalDFA :: [state]
@@ -25,7 +27,7 @@ data NFA state symbol = NFA
                     , alphabetNFA :: [symbol]
                     , transitionNFA :: (state, Maybe symbol) -> [state]
                     , beginNFA :: state
-                    , finalFNA :: [state]
+                    , finalNFA :: [state]
                     }
 
 -- Show instance for DFA
@@ -50,7 +52,7 @@ instance (Show state, Show symbol) => Show (NFA state symbol) where
                "  alphabetNFA = " ++ show (alphabetNFA nfa) ++ ",\n" ++
                "  transitionNFA = fromMaybe [] $ lookup " ++ show (transitionListNFA nfa) ++
                "  beginNFA = " ++ show (beginNFA nfa) ++ 
-               "  finalFNA = " ++ show (finalFNA nfa) ++
+               "  finalFNA = " ++ show (finalNFA nfa) ++
                "}"
                where
                     transitionListNFA :: NFA state symbol -> [((state,symbol), [state])]
@@ -80,12 +82,23 @@ evaluateDFA (DFA _ _ delta begin final) syms = case next of
                 Nothing -> Nothing
                 Just q' -> walkDFA (Just q') ss
 
-{-
-evaluateNFA :: Eq a => DFA a b -> [b] -> Bool
-evaluateNFA nfa sys = walkDFA (beginDFA nfa) sys `elem` finalDFA nfa where
-    walkDFA state [] = state
-    walkDFA state (s:ss) = walkDFA (transitionDFA nfa (state, s)) ss
--}
+
+evaluateNFA :: Eq a => NFA a b -> [b] -> Bool
+evaluateNFA nfa sys =  any (\s -> s `elem` finalNFA nfa) (walkNFA [beginNFA nfa] sys ) where
+    delta = transitionNFA nfa
+    walkNFA states []     = transition' delta Nothing states
+    walkNFA states (c:cs) = walkNFA (transition' delta (Just c) states) cs 
+
+
+-- Apply Non-determ transition function (including epsilons) to a collection of states:
+transition' :: Eq state 
+                => ((state, Maybe symbol) -> [state])                       -- Transition function 
+                -> Maybe symbol                                             -- Symbol (or epsilon) to read
+                -> [state]                                                  -- Current states
+                -> [state]                                                  -- Reached states
+transition' _ _ []                    = []
+transition' delta mc (state : states) = delta (state, Nothing)  `union`   delta (state, mc)   `union`    transition' delta mc states 
+
 
 epsilonClosure :: (Eq state, Ord state) => NFA state symbol -> state -> [state]
 epsilonClosure nfa x = sort $ closing [] [x] where

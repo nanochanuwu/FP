@@ -9,16 +9,8 @@ module NfaToReg where
 
 import DfaAndNfa ( NFA(NFA) )
 import RegExp ( RegExp(..) )
-import Data.List( union)
 
--- Apply Non-determ transition function (including epsilons) to a colletion of states:
-transition' :: Eq state 
-                => ((state, Maybe symbol) -> [state])                       -- Transition function 
-                -> Maybe symbol                                             -- Symbol (or epsilon) to read
-                -> [state]                                                  -- Current states
-                -> [state]                                                  -- Reached states
-transition' _ _ []                    = []
-transition' delta mc (state : states) = delta (state, Nothing)  `union`   delta (state, mc)   `union`    transition' delta mc states 
+
 -- Get collection of labels in a NFA from a given origin state
 -- to a destination state.
 labelsFromTo :: (Eq state) 
