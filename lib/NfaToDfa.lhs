@@ -51,6 +51,8 @@ nfaToDfa (NFA statesN alphabetN transN startN endN) =
   let nfa = NFA statesN alphabetN transN startN endN
       statesD = powerSetList statesN
       alphabetD = alphabetN
+      -- QUESTION: Why are we taking epsilon-closure here?
+      -- Sipser (page 55) doesn't take epsilon-closure
       startD = epsilonClosure nfa startN
       endD = filter (\state -> not $ null (state `intersect` endN)) statesD
       transD (st, sy) =

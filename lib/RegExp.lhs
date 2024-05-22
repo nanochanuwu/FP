@@ -84,7 +84,9 @@ simplify re -- repetedly apply the one-step simplification function until a fixe
         oneStepSimplify Epsilon = Epsilon
         oneStepSimplify (Literal l) = Literal l
         oneStepSimplify (Or re1 re2) 
+            -- Potentially more simplification can be done for re2:
             | re1 == Empty = re2
+            -- Potentially more simplification can be done for re1:
             | re2 == Empty = re1
             | re1 == re2 = oneStepSimplify re1
             | otherwise = Or (oneStepSimplify re1) (oneStepSimplify re2)
