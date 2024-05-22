@@ -77,24 +77,7 @@ evaluateDFA (DFA _ _ delta begin final) syms = case walkDFA (Just begin) syms of
             Nothing -> Nothing
             Just q' -> walkDFA (Just q') ss
 
-
-evaluateNFA :: Eq a => NFA a b -> [b] -> Bool
-evaluateNFA nfa sys =  any (\s -> s `elem` finalNFA nfa) (walkNFA [beginNFA nfa] sys ) where
-    delta = transitionNFA nfa
-    walkNFA states []     = transition' delta Nothing states
-    walkNFA states (c:cs) = walkNFA (transition' delta (Just c) states) cs 
-
-
--- Apply Non-determ transition function (including epsilons) to a collection of states:
-transition' :: Eq state 
-                => ((state, Maybe symbol) -> [state])                       -- Transition function 
-                -> Maybe symbol                                             -- Symbol (or epsilon) to read
-                -> [state]                                                  -- Current states
-                -> [state]                                                  -- Reached states
-transition' _ _ []                    = []
-transition' delta mc (state : states) = delta (state, Nothing)  `union`   delta (state, mc)   `union`    transition' delta mc states 
-
-
+-- Close the set {x} under epsilon-arrows
 epsilonClosure :: (Eq state, Ord state) => NFA state symbol -> state -> [state]
 epsilonClosure nfa x = sort $ closing [] [x] where
   closing visited [] = visited
@@ -102,5 +85,28 @@ epsilonClosure nfa x = sort $ closing [] [x] where
     | y `elem` visited = closing visited ys
     | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
 
+
+-- This is U_{x in xs} epsilonClosure nfa x
+epsilonClosureSet :: (Eq state, Ord state) => NFA state symbol -> [state] -> [state]
+epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
+
+-- Implementation from here: https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton
+
+evaluateNFA :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
+
+                                                                        -- Cannot tell for recursive case if
+                                                                        -- "wa" is "a : w" or "w ++ [a]"
+                                                                        -- in wikipedia article (assumed it was latter).
+evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (reverse syms)) where
+    walkNFA :: state -> [symbol] -> [state]
+    -- delta*(q, epsilon) = E {q} 
+    walkNFA   q  []       = epsilonClosureSet nfa [q]
+    
+    -- delta*(q, w ++ [a]) = U_{r in delta*(q, w)} E(delta(r,a))
+    walkNFA q (a : w)      = concatMap (\r -> epsilonClosureSet nfa (delta (r, Just a))) walkNFA' where
+        delta = transitionNFA nfa
+        
+        -- delta*(q, w)
+        walkNFA' = walkNFA q w
 
 \end{code}
