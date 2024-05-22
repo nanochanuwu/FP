@@ -1,4 +1,4 @@
-\section{Regular Expressions}\label{sec:reg_exp}
+\section{Regular Expressions} \label{sec:RegExp}
 
 \begin{definition}
     Fix an alphabet $\Sigma$. We say that $R$ is \emph{regular expression} over $\Sigma$ if:

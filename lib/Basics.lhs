@@ -1,5 +1,4 @@
-
-\section{The most basic library}\label{sec:Basics}
+\section{The most basic library} \label{sec:Basics}
 
 This section describes a module which we will import later on.
 

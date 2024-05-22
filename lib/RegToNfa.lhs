@@ -1,3 +1,5 @@
+\section{Converting Reg back to NFA } \label{sec:RegToNfa}
+
 \begin{code}
 module RegToNfa where
 

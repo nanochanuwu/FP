@@ -1,4 +1,4 @@
-\section{DFAs and NFAs}\label{sec:dfa_nfa}
+\section{DFAs and NFAs} \label{sec:DfaAndNfa}
 
 \begin{code}
 module DfaAndNfa where
@@ -72,5 +72,5 @@ epsilonClosure nfa x = sort $ closing [] [x] where
   closing visited (y:ys)
     | y `elem` visited = closing visited ys
     | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
-    
+
 \end{code}
