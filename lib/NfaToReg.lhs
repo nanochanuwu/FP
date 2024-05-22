@@ -7,8 +7,31 @@ an equivalent Regular-Expression.
 
 module NfaToReg where
 
-import DfaAndNfa
-import RegExp
+import DfaAndNfa ( NFA(NFA) )
+import RegExp ( RegExp(..) )
+import Data.List( union)
+
+-- Apply Non-determ transition function (including epsilons) to a colletion of states:
+transition' :: Eq state 
+                => ((state, Maybe symbol) -> [state])                       -- Transition function 
+                -> Maybe symbol                                             -- Symbol (or epsilon) to read
+                -> [state]                                                  -- Current states
+                -> [state]                                                  -- Reached states
+transition' _ _ []                    = []
+transition' delta mc (state : states) = delta (state, Nothing)  `union`   delta (state, mc)   `union`    transition' delta mc states 
+-- Get collection of labels in a NFA from a given origin state
+-- to a destination state.
+labelsFromTo :: (Eq state) 
+            =>  ((state, Maybe symbol) -> [state])                          -- Transition function
+            -> [symbol]                                                     -- Alphabet
+            ->  state                                                       -- Origin state
+            ->  state                                                       -- Destination state
+            ->  [Maybe symbol]                                              -- Collection of labels
+labelsFromTo delta labels o d = [label | label <- labels', 
+                                         d `elem` delta (o, label)] 
+                        where
+                         -- labels' = lables \cup {\varepsilon}
+                            labels' = fmap Just labels ++ [Nothing]
 
 -- Convert a label (or epsilon)
 -- to a Reg-Ex 
@@ -20,11 +43,10 @@ labelToReg (Just c)  = Literal c
 
 -- COnverts a collection of labels
 -- to a Reg-Ex in the obvious way, ie:
-    -- labelsToReg ['a', 'b', 'c', ε]  = 'a' | 'b' | 'c' | 'ε' 
-labelsToReg :: [Maybe symbol]       -- Collection of  labels ∪ ε
+    -- labelsToReg ['a', 'b', 'c', \varepsilon]  = 'a' | 'b' | 'c' | '\varepsilon' 
+labelsToReg :: [Maybe symbol]       -- Collection of  labels \cup \varepsilon
             -> RegExp symbol        -- Equivalent Reg-Ex
-labelsToReg labels = foldr Or Empty (fmap labelToReg labels)
-
+labelsToReg = foldr (Or .labelToReg) Empty 
 
 -- Reg-Ex of paths in NFA that go from
 -- an origin state to a destination
@@ -37,7 +59,7 @@ r :: (Eq state, Num state)
     -> state                                                     -- Destination state
     -> RegExp symbol                                             -- Reg-Ex for all label-paths
 
--- R^{0} ij          =  a_{1} | ... | a_{m}         q_{j} in  Δ(q_{i}, a_{1}) ∪ ... ∪ Δ(q_{i}, a_{m})
+-- R^{0} ij          =  a_{1} | ... | a_{m}         q_{j} in  \Delta{q_{i}, a_{1}) \cup ... \cup \Delta(q_{i}, a_{m})
 r delta labels 0 i j = labelsToReg (labelsFromTo delta labels i j)
 
 --  R^{k} ij         = R^{k-1} ik               (R^{k-1} kk)*                   R^{k-1} kj       |               R^{k-1} ij
