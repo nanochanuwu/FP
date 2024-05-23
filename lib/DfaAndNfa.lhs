@@ -6,7 +6,6 @@
 module DfaAndNfa where
 
 import Test.QuickCheck
-import Data.List ( sort, union )
 import Data.Maybe ( fromMaybe )
 
 data DFA state symbol = DFA
@@ -92,7 +91,7 @@ epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
 
 -- Implementation from here: https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton
 
-evaluateNFA :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
+evaluateNFA :: forall state symbol . Eq state => NFA state symbol -> [symbol] -> Bool
 evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (reverse syms)) where
     walkNFA :: state -> [symbol] -> [state]
     -- delta*(q, epsilon) = E {q} 
@@ -103,7 +102,7 @@ evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (revers
         -- delta*(q, w)
         walkNFA' = walkNFA q w
 
-evaluateNFA' :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
+evaluateNFA' :: forall state symbol . Eq state => NFA state symbol -> [symbol] -> Bool
 evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
     walkNFA :: [state] -> [symbol] -> [state]
     walkNFA states [] = epsilonClosureSet nfa states
