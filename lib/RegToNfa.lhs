@@ -40,7 +40,7 @@ regexToNfa re = fst $ regexToNfaHelper re 1 where
         states = s1 `union` s2
         alphabet = a1 `union` a2
         delta (st,sy)
-            | st `elem` f1 && isNothing sy = [b2] -- epsilon-transitions from old NFA1's final states to NFA2's start state
+            | st `elem` f1 && isNothing sy = [b2] `union` d1 (st,sy) -- epsilon-transitions from old NFA1's final states to NFA2's start state
             | st `elem` s1 = d1 (st,sy)
             | st `elem` s2 = d2 (st,sy)
             | otherwise = []
