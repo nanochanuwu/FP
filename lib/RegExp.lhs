@@ -75,37 +75,34 @@ matches str re = case re of
 % todo: find appropriate reference
 
 \begin{code}
-simplify :: Eq sym => RegExp sym -> RegExp sym
-simplify re -- repetedly apply the one-step simplification function until a fixed point is reached
-    | oneStepSimplify re == re = re
+simplify :: forall sym . Eq sym => RegExp sym -> RegExp sym
+simplify re -- repeatedly apply the one-step simplify function until a fixed point is reached
+    | oneStepSimplify re == re = re 
     | otherwise = simplify $ oneStepSimplify re
-    where 
+    where
+        oneStepSimplify :: Eq sym => RegExp sym -> RegExp sym
         oneStepSimplify Empty = Empty
         oneStepSimplify Epsilon = Epsilon
         oneStepSimplify (Literal l) = Literal l
         oneStepSimplify (Or re1 re2) 
-                            -- Q: Still need to simplify re2?
-            | re1 == Empty = re2
-            
-                            -- Q: Still need to simplify re1?
-            | re2 == Empty = re1
+            | re1 == Empty = oneStepSimplify re2
+            | re2 == Empty = oneStepSimplify re1
             | re1 == re2 = oneStepSimplify re1
             | otherwise = Or (oneStepSimplify re1) (oneStepSimplify re2)
         oneStepSimplify (Concat re1 re2) 
             | re1 == Empty || re2 == Empty = Empty
-            
-                            -- Q: Still need to simplify re2?
-            | re1 == Epsilon = re2
-            
-                            -- Q: Still need to simplify re1?
-            | re2 == Epsilon = re1
+            | re1 == Epsilon = oneStepSimplify re2
+            | re2 == Epsilon = oneStepSimplify re1
             | otherwise = Concat (oneStepSimplify re1) (oneStepSimplify re2)
         oneStepSimplify (Star re') = case re' of
             Empty -> Epsilon
             Epsilon -> Epsilon
             Or Epsilon re2 -> Star (oneStepSimplify re2)
             Or re1 Epsilon -> Star (oneStepSimplify re1)
-            _ -> Star (oneStepSimplify re)
+            _ -> Star (oneStepSimplify re')
+
+testRe :: RegExp Char
+testRe = orAll [(Star (Literal 'l') `Or` Epsilon) `Concat` concatAll [Literal 'm', Literal 'g', Star Epsilon], Star Epsilon, Literal 'l' `Concat` Literal 'f']
 \end{code}
 
 Finally, we implement a way to generate random regular expressions using QuickCheck. 

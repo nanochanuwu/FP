@@ -54,11 +54,7 @@ regexToNfa re = fst $ regexToNfaHelper re 1 where
         delta (st,sy)
             | st == n' && isNothing sy = [b] -- epsilon-transitions from new start to old start state
             | st == n' = []
-            -- ERROR: Disagrees with Sisper (page 63) here:
-            -- Should probably be:
-            -- "st `elem` f && isNothing sy = [b] `union` d(st, Nothing)"
-            | st `elem` f && isNothing sy = [b] -- epsilon-transitions from final states to old start state
-            
+            | st `elem` f && isNothing sy = [b] `union` d (st, Nothing)
             | otherwise = d (st,sy)
         begin = n'
         final = [n'] `union` f
