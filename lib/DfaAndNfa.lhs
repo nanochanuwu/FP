@@ -78,12 +78,12 @@ evaluateDFA (DFA _ _ delta begin final) syms = case walkDFA (Just begin) syms of
             Just q' -> walkDFA (Just q') ss
 
 -- Close the set {x} under epsilon-arrows
-epsilonClosure :: (Eq state, Ord state) => NFA state symbol -> state -> [state]
+epsilonClosure :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> state -> [state]
 epsilonClosure nfa x = sort $ closing [] [x] where
-  closing visited [] = visited
-  closing visited (y:ys)
-    | y `elem` visited = closing visited ys
-    | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
+    closing visited [] = visited
+    closing visited (y:ys)
+        | y `elem` visited = closing visited ys
+        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
 
 
 -- This is U_{x in xs} epsilonClosure nfa x
@@ -93,20 +93,22 @@ epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
 -- Implementation from here: https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton
 
 evaluateNFA :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
-
-                                                                        -- Cannot tell for recursive case if
-                                                                        -- "wa" is "a : w" or "w ++ [a]"
-                                                                        -- in wikipedia article (assumed it was latter).
-evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (reverse syms)) where
+evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) syms) where
     walkNFA :: state -> [symbol] -> [state]
     -- delta*(q, epsilon) = E {q} 
     walkNFA   q  []       = epsilonClosureSet nfa [q]
-    
     -- delta*(q, w ++ [a]) = U_{r in delta*(q, w)} E(delta(r,a))
     walkNFA q (a : w)      = concatMap (\r -> epsilonClosureSet nfa (delta (r, Just a))) walkNFA' where
         delta = transitionNFA nfa
-        
         -- delta*(q, w)
         walkNFA' = walkNFA q w
+
+evaluateNFA' :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
+evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
+    walkNFA :: [state] -> [symbol] -> [state]
+    walkNFA states [] = concatMap (epsilonClosure nfa) states
+    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where
+        transition q = transitionNFA nfa (q, Just s)
+        epsilonClosureStates = concatMap (epsilonClosure nfa) states
 
 \end{code}
