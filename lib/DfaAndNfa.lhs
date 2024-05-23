@@ -78,8 +78,8 @@ evaluateDFA (DFA _ _ delta begin final) syms = case walkDFA (Just begin) syms of
             Just q' -> walkDFA (Just q') ss
 
 -- Close the set {x} under epsilon-arrows
-epsilonClosure :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> state -> [state]
-epsilonClosure nfa x = sort $ closing [] [x] where
+epsilonClosure :: forall state symbol . Eq state => NFA state symbol -> state -> [state]
+epsilonClosure nfa x = closing [] [x] where
     closing visited [] = visited
     closing visited (y:ys)
         | y `elem` visited = closing visited ys
@@ -87,13 +87,13 @@ epsilonClosure nfa x = sort $ closing [] [x] where
 
 
 -- This is U_{x in xs} epsilonClosure nfa x
-epsilonClosureSet :: (Eq state, Ord state) => NFA state symbol -> [state] -> [state]
+epsilonClosureSet :: Eq state => NFA state symbol -> [state] -> [state]
 epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
 
 -- Implementation from here: https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton
 
 evaluateNFA :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
-evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) syms) where
+evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (reverse syms)) where
     walkNFA :: state -> [symbol] -> [state]
     -- delta*(q, epsilon) = E {q} 
     walkNFA   q  []       = epsilonClosureSet nfa [q]
@@ -106,9 +106,9 @@ evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) syms) w
 evaluateNFA' :: forall state symbol . (Eq state, Ord state) => NFA state symbol -> [symbol] -> Bool
 evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
     walkNFA :: [state] -> [symbol] -> [state]
-    walkNFA states [] = concatMap (epsilonClosure nfa) states
+    walkNFA states [] = epsilonClosureSet nfa states
     walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where
         transition q = transitionNFA nfa (q, Just s)
-        epsilonClosureStates = concatMap (epsilonClosure nfa) states
+        epsilonClosureStates = epsilonClosureSet nfa states
 
 \end{code}

@@ -13,7 +13,7 @@ import DfaAndNfa
       NFA(NFA, transitionNFA),
       epsilonClosure )
 import Data.Maybe ( fromMaybe, mapMaybe )
-import Data.List ( intersect, nub, sort )
+import Data.List ( intersect, nub )
 
 printDFA :: (Show state, Show symbol) => DFA state symbol -> String
 printDFA (DFA states alphabet transition begin final) =
@@ -46,7 +46,7 @@ powerSetList [] = [[]]
 powerSetList (x:xs) = map (x:) (powerSetList xs) ++ powerSetList xs
 
 
-nfaToDfa :: Ord a => NFA a b -> DFA [a] b
+nfaToDfa :: Eq state => NFA state symbol -> DFA [state] symbol
 nfaToDfa (NFA statesN alphabetN transN startN endN) =
   let nfa = NFA statesN alphabetN transN startN endN
       statesD = powerSetList statesN
@@ -64,8 +64,8 @@ nfaToDfa (NFA statesN alphabetN transN startN endN) =
 
 
 -- Use small adjustment of epsilonClosure function to find all reachable states from a given set of initial states
-findReachableStatesDFA :: forall state symbol . (Eq state, Ord state) => DFA state symbol -> [state] -> [state]
-findReachableStatesDFA dfa initialStates = sort . nub $ closing [] initialStates where
+findReachableStatesDFA :: forall state symbol . Eq state => DFA state symbol -> [state] -> [state]
+findReachableStatesDFA dfa initialStates = nub $ closing [] initialStates where
   closing :: Eq state => [state] -> [state] -> [state] 
   closing visited [] = visited
   closing visited (y:ys)
@@ -75,7 +75,7 @@ findReachableStatesDFA dfa initialStates = sort . nub $ closing [] initialStates
   nextStates state = mapMaybe (\sym -> transitionDFA dfa (state, sym)) (alphabetDFA dfa) -- checks for the next states following "state" 
 
 -- Function to remove unreachable states from a DFA
-removeUnreachableStates :: (Eq state, Ord state, Eq symbol) => DFA state symbol -> DFA state symbol
+removeUnreachableStates :: (Eq state, Eq symbol) => DFA state symbol -> DFA state symbol
 removeUnreachableStates dfa = DFA reachableStates (alphabetDFA dfa) newTransition (beginDFA dfa) newFinalStates where
   reachableStates = findReachableStatesDFA dfa [beginDFA dfa] -- Other states cannot play a role in the evaluation of strings
   transitionsToReachables = [((s, a), transitionDFA dfa (s, a)) | s <- reachableStates, a <- alphabetDFA dfa]
