@@ -8,7 +8,7 @@ an equivalent Regular-Expression.
 module NfaToReg where
 
 import DfaAndNfa ( NFA(NFA) )
-import RegExp ( RegExp(..) )
+import RegExp ( RegExp(..), orAll )
 
 
 -- Get collection of labels in a NFA from a given origin state
@@ -38,7 +38,7 @@ labelToReg (Just c)  = Literal c
     -- labelsToReg ['a', 'b', 'c', \varepsilon]  = 'a' | 'b' | 'c' | '\varepsilon' 
 labelsToReg :: [Maybe symbol]       -- Collection of  labels \cup \varepsilon
             -> RegExp symbol        -- Equivalent Reg-Ex
-labelsToReg = foldr (Or .labelToReg) Empty 
+labelsToReg labels = orAll (fmap labelToReg labels) 
 
 -- Reg-Ex of paths in NFA that go from
 -- an origin state to a destination
