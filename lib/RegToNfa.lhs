@@ -9,7 +9,7 @@ import Data.List ( union )
 import Data.Maybe ( isNothing )
 
 regexToNfa :: Eq sym => RegExp sym -> NFA Int sym
-regexToNfa re = fst $ regexToNfaHelper re 1 where
+regexToNfa re = fst $ regexToNfaHelper re 0 where
     -- auxiliary function used to build an NFA equivalent to the given regex
     -- its second parameter is the first available int to name the NFA's states
     -- returns the NFA built from the smaller regex's, and the next first available int

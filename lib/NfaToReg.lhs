@@ -51,8 +51,14 @@ r :: (Eq state, Num state)
     -> state                                                     -- Destination state
     -> RegExp symbol                                             -- Reg-Ex for all label-paths
 
--- R^{0} ij          =  a_{1} | ... | a_{m}         q_{j} in  \Delta{q_{i}, a_{1}) \cup ... \cup \Delta(q_{i}, a_{m})
-r delta labels 0 i j = labelsToReg (labelsFromTo delta labels i j)
+-- R^{0} ij          
+r delta labels 0 i j 
+        --          =  a_{1} | ... | a_{m} | Epsilon  
+        | i == j    = labelsToReg (labelsFromTo delta labels i j) `Or` Epsilon
+        
+        --            =  a_{1} | ... | a_{m}         q_{j} in  \Delta{q_{i}, a_{1}) \cup ... \cup \Delta(q_{i}, a_{m})
+        | otherwise 
+                        = labelsToReg (labelsFromTo delta labels i j)
 
 --  R^{k} ij         = R^{k-1} ik               (R^{k-1} kk)*                   R^{k-1} kj       |               R^{k-1} ij
 r delta labels k i j = r' (k-1) i k  `Concat`   Star(r' (k-1) k k)  `Concat`    r' (k-1) k j    `Or`             r' (k-1) i j         
