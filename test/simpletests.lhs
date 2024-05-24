@@ -1,4 +1,3 @@
-
 \section{Simple Tests}
 \label{sec:simpletests}
 
@@ -8,26 +7,38 @@ and test some properties.
 \begin{code}
 module Main where
 
-import Basics
+import RegExp ( RegExp, matches, simplify )
+import RegToNfa ( regexToNfa )
+import DfaAndNfa ( evaluateDFA, evaluateNFA, NFA )
 
-import Test.Hspec
-import Test.QuickCheck
-\end{code}
+import Test.Hspec ( hspec, describe, it )
+import Test.QuickCheck ( Testable(property) )
+import NfaToReg (nfaToReg)
+import NfaToDfa (nfaToDfa)
 
-The following uses the HSpec library to define different tests.
-Note that the first test is a specific test with fixed inputs.
-The second and third test use QuickCheck.
-
-\begin{code}
 main :: IO ()
 main = hspec $ do
   describe "Basics" $ do
-    it "somenumbers should be the same as [1..10]" $
-      somenumbers `shouldBe` [1..10]
-    it "if n > - then funnyfunction n > 0" $
-      property (\n -> n > 0 ==> funnyfunction n > 0)
-    it "myreverse: using it twice gives back the same list" $
-      property $ \str -> myreverse (myreverse str) == (str::String)
+    it "simplify regex" $ property pSimplify
+    it "regex to nfa" $ property pRegexToNfa
+    -- it "nfa to regex" $ property pNfaToRegex
+    it "regex to nfa and back" $ property pRegexToNfaAndBack
+    it "regex to nfa to dfa" $ property pRegexToNfaToDfa
+
+pSimplify :: RegExp Bool -> [Bool] -> Bool
+pSimplify re s = matches s re == matches s (simplify re)
+
+pRegexToNfa :: RegExp Bool -> [Bool] -> Bool
+pRegexToNfa re s = matches s re == evaluateNFA (regexToNfa re) s
+
+pNfaToRegex :: NFA Int Char -> [Char] -> Bool
+pNfaToRegex nfa s = evaluateNFA nfa s == matches s (nfaToReg nfa)
+
+pRegexToNfaAndBack :: RegExp Bool -> [Bool] -> Bool
+pRegexToNfaAndBack re s = matches s re == matches s ( (simplify . nfaToReg . regexToNfa ) re )
+
+pRegexToNfaToDfa :: RegExp Bool -> [Bool] -> Bool
+pRegexToNfaToDfa re s = matches s re == evaluateDFA ( nfaToDfa $ regexToNfa re) s
 \end{code}
 
 To run the tests, use \verb|stack test|.
