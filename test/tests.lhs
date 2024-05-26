@@ -15,11 +15,11 @@ import Test.QuickCheck ( Testable(property) )
 main :: IO ()
 main = hspec $ do
   describe "Regular languages: finite automata and regular expressions" $ do
-    it "simplify regex" $ property pSimplify
-    it "regex to nfa" $ property pRegexToNfa
-    -- it "nfa to regex" $ property pNfaToRegex                 -- no Arbitrary NFA yet
-    it "regex to nfa and back" $ property pRegexToNfaAndBack    -- note that this might take very long
-    -- it "regex to nfa to dfa" $ property pRegexToNfaToDfa     -- fails
+    it "- simplify regex" $ property pSimplify
+    it "- regex to nfa" $ property pRegexToNfa
+    -- it "nfa to regex" $ property pNfaToRegex                   -- no Arbitrary NFA yet
+    it "- regex to nfa and back" $ property pRegexToNfaAndBack    -- note that this might take very long
+    -- it "- regex to nfa to dfa" $ property pRegexToNfaToDfa     -- sometimes fails
 
 pSimplify :: RegExp Bool -> [Bool] -> Bool
 pSimplify re s = matches s re == matches s (simplify re)
@@ -27,7 +27,7 @@ pSimplify re s = matches s re == matches s (simplify re)
 pRegexToNfa :: RegExp Bool -> [Bool] -> Bool
 pRegexToNfa re s = matches s (simplify re) == evaluateNFA (regexToNfa $ simplify re) s
 
-pNfaToRegex :: NFA Int Char -> [Char] -> Bool
+pNfaToRegex :: NFA Int Bool -> [Bool] -> Bool
 pNfaToRegex nfa s = evaluateNFA nfa s == matches s (nfaToReg nfa)
 
 pRegexToNfaAndBack :: RegExp Bool -> [Bool] -> Bool

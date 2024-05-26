@@ -2,8 +2,8 @@
 \input{tex/latexmacros.tex}
 \usepackage{csquotes}
 
-\title{My Report}
-\author{Me}
+\title{Finite automata and regular expressions in Haskell}
+\author{N. Batistoni, M. L\"ursen, P. Fink, J. Sorkin}
 \date{\today}
 \hypersetup{pdfauthor={Me}, pdftitle={My Report}}
 
@@ -12,7 +12,17 @@
 \maketitle
 
 \begin{abstract}
-    \ldots
+    We implement the data types for deterministic and non-deterministic finite automata,
+    as well as for regular expressions.
+    Moreover, we implement the proofs of their equivalence in describing regular languages
+    from Chapter 1 of~\cite{sipser2012}.
+
+    Notes for the peer reviewers: \begin{itemize}
+        \item to compile everything, use \verb|stack build|;
+        \item to play with the code in ghci, use \verb|stack ghci|;
+        \item there is an executable, but it is still the one from the template which doesn't really do anything;
+        \item to run the tests from \S~\ref{sec:tests}, use \verb|stack clean && stack test|. 
+    \end{itemize}
 \end{abstract}
 
 \vfill

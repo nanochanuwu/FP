@@ -15,20 +15,20 @@
     \begin{enumerate}[(i)]
         \item Q is a finite set of states,
         \item $\Sigma$ is a finite set of symbols (the alphabet),
-        \item $\delta^{NFA} : Q \times \Sigma \cup \{\epsilon\} \to \mathcal{P}(Q)$ is a transition function,
+        \item $\delta^{NFA} : Q \times \Sigma \cup \{\varepsilon\} \to \mathcal{P}(Q)$ is a transition function,
         \item $q_0 \in Q$ is the start state,
         \item $F \subseteq Q$ is a set of final states.
     \end{enumerate}
 \end{definition}
 
 We have implemented these definitions as closely as possible in the data type definitions below. There are a couple of things to note about this. 
-First, notice how the $\delta^{DFA}$ function maps a tuple of type "state" and "symbol" to the type "Maybe state". The reason for 
+First, notice how the $\delta^{DFA}$ function maps a tuple of type \texttt{state} and \texttt{symbol} to the type \texttt{Maybe state}. The reason for 
 this is that $\delta^{DFA}$ can be a partial function, potentially leading to exceptions when excecuting functions call the transition function. To handle 
-such exceptions more easily we implement $\delta^{DFA}$ to map to "Maybe state", returning "Nothing" whenever the function is not defined for a particular
-combination of $(st, sy)$. We make the necessary steps to and from the "Maybe" context within the functions requiring such conversions themselves.
-Second, $\delta^{NFA}$ maps a tuple of type "state" and "Maybe symbol" to the type "list of state". We choose to represent $\Sigma \cup \{\epsilon\}$ using 
-"Maybe symbol" as it provides the additional value to the alphabet by which we can represent $\epsilon$-transitions. Here too we make the conversion to and
-from "Maybe" within the functions that require these conversions themselves.
+such exceptions more easily we implement $\delta^{DFA}$ to map to \texttt{Maybe state}, returning \texttt{Nothing} whenever the function is not defined for a particular
+combination of $(st, sy)$. We make the necessary steps to and from the \texttt{Maybe} context within the functions requiring such conversions themselves.
+Second, $\delta^{NFA}$ maps a tuple of type \texttt{state} and \texttt{Maybe symbol} to the type \texttt{[state]}. We choose to represent $\Sigma \cup \{\varepsilon\}$ using 
+\texttt{Maybe symbol} as it provides the additional value to the alphabet by which we can represent $\varepsilon$-transitions. Here too we make the conversion to and
+from \texttt{Maybe} within the functions that require these conversions themselves.
 
 \begin{code}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -123,6 +123,33 @@ evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) 
     walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where
         transition q = transitionNFA nfa (q, Just s)
         epsilonClosureStates = epsilonClosureSet nfa states
+
+
+printDFA :: (Show state, Show symbol) => DFA state symbol -> String
+printDFA (DFA states alphabet transition begin final) =
+    "States: " ++ show states ++ "\n" ++
+    "Alphabet: " ++ show alphabet ++ "\n" ++
+    "Start State: " ++ show begin ++ "\n" ++
+    "Final States: " ++ show final ++ "\n" ++
+    "Transitions:\n" ++ unlines (map showTransition allTransitions)
+  where
+    showTransition ((state, sym), nextState) =
+        show state ++ " -- " ++ show sym ++ " --> " ++ show nextState
+    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- alphabet ]
+
+printNFA :: (Show state, Show symbol) => NFA state symbol -> String
+printNFA (NFA states alphabet transition begin final) =
+    "States: " ++ show states ++ "\n" ++
+    "Alphabet: " ++ show alphabet ++ "\n" ++
+    "Start State: " ++ show begin ++ "\n" ++
+    "Final States: " ++ show final ++ "\n" ++
+    "Transitions: \n" ++ unlines (map showTransition allTransitions)
+  where
+    showTransition ((state, Nothing), nextStates) =
+        show state ++ " -- " ++ "eps" ++ " --> " ++ show nextStates
+    showTransition ((state, Just sym), nextStates) =
+        show state ++ " -- " ++ show sym ++ " --> " ++ show nextStates
+    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- Nothing : map Just alphabet, not $ null $ transition (state,sym)]
 
 {-
 --TODO: 

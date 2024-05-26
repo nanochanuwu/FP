@@ -16,43 +16,12 @@ import Data.Maybe ( fromMaybe, mapMaybe )
 import Data.List ( intersect, nub )
 \end{code}
 
-\begin{code}
--- Move to DfaAndNfa
-printDFA :: (Show state, Show symbol) => DFA state symbol -> String
-printDFA (DFA states alphabet transition begin final) =
-    "States: " ++ show states ++ "\n" ++
-    "Alphabet: " ++ show alphabet ++ "\n" ++
-    "Start State: " ++ show begin ++ "\n" ++
-    "Final States: " ++ show final ++ "\n" ++
-    "Transitions:\n" ++ unlines (map showTransition allTransitions)
-  where
-    showTransition ((state, sym), nextState) =
-        show state ++ " -- " ++ show sym ++ " --> " ++ show nextState
-    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- alphabet ]
-
-printNFA :: (Show state, Show symbol) => NFA state symbol -> String
-printNFA (NFA states alphabet transition begin final) =
-    "States: " ++ show states ++ "\n" ++
-    "Alphabet: " ++ show alphabet ++ "\n" ++
-    "Start State: " ++ show begin ++ "\n" ++
-    "Final States: " ++ show final ++ "\n" ++
-    "Transitions: \n" ++ unlines (map showTransition allTransitions)
-  where
-    showTransition ((state, Nothing), nextStates) =
-        show state ++ " -- " ++ "eps" ++ " --> " ++ show nextStates
-    showTransition ((state, Just sym), nextStates) =
-        show state ++ " -- " ++ show sym ++ " --> " ++ show nextStates
-    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- Nothing : map Just alphabet, not $ null $ transition (state,sym)]
-
--- takes a list and returns a list of all sublists. These "powerlist" will take the role of the powerset in the original powerset construction.
-\end{code}
-
 We straight forwardly implement the powersetconstruction . Here, we translate a NFA, $N=(Q,\Sigma , T, q_0, F)$, 
-where $Q$ is the set of states, $\Sigma$ is the alphabet, $T$ is the transitions function $T:Q\times \Sigma )\rightarrow Q$, $q_0\in Q$ the initial state 
-and $F\subseteq Q$ the set of final states. We define the corrsponding DFA as $D=(Q',\Sigma , T',q,F') where
+where $Q$ is the set of states, $\Sigma$ is the alphabet, $T$ is the transitions function $T:Q\times \Sigma \rightarrow Q$, $q_0\in Q$ the initial state 
+and $F\subseteq Q$ the set of final states. We define the corrsponding DFA as $D=(Q',\Sigma , T',q,F')$ where
 \begin{itemize}
     \item $Q'=\mathcal{P}(Q)$
-    \item T':Q'\times \Sigma\rightarrow Q', T'((S,x))=T'(\bigcup_{q\in S}\{ T(q,x)\} ,\epsilon )$
+    \item $T':Q'\times \Sigma\rightarrow Q', T'((S,x))=T'(\bigcup_{q\in S}\{ T(q,x)\} ,\epsilon )$
     \item $q=T(q_0,\epsilon )$
     \item $F'= Q'\cap F$ 
 \end{itemize}
@@ -68,7 +37,7 @@ nfaToDfa (NFA statesN alphabetN transN startN endN) =
   let nfa = NFA statesN alphabetN transN startN endN
       statesD = powerSetList statesN                                          -- new set of states
       alphabetD = alphabetN                                                   -- same alphabet as the NFA
-      startD = epsilonClosure nfa startN                                      -- the set of all states reachable from initial states in the NFA by ε-moves
+      startD = epsilonClosure nfa startN                                      -- the set of all states reachable from initial states in the NFA by epsilon-moves
       endD = filter (\state -> not $ null (state `intersect` endN)) statesD   -- All states that contain an endstate.
       transD (st, sy) =                                                       -- 
           Just $ nub $ concatMap (epsilonClosure nfa) syTransitionsForDfaStates where        -- epsilonClosure of the sy-reachable states
