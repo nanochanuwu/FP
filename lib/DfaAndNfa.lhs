@@ -1,11 +1,41 @@
 \section{DFAs and NFAs} \label{sec:DfaAndNfa}
+\begin{definition}
+    We define a deterministic finite automaton (DFA) as a 5-tuple $\langle Q , \Sigma, \delta, q_0, F \rangle$ where
+    \begin{enumerate}[(i)]
+        \item Q is a finite set of states,
+        \item $\Sigma$ is a finite set of symbols (the alphabet),
+        \item $\delta^{DFA} : Q \times \Sigma \to Q $ is a transition function,
+        \item $q_0 \in Q$ is the start state,
+        \item $F \subseteq Q$ is a set of final states.
+    \end{enumerate}
+\end{definition}
+
+\begin{definition}
+    We define a nondeterministic finite automaton (NFA) as a 5-tuple $\langle Q , \Sigma, \delta, q_0, F \rangle$ where
+    \begin{enumerate}[(i)]
+        \item Q is a finite set of states,
+        \item $\Sigma$ is a finite set of symbols (the alphabet),
+        \item $\delta^{NFA} : Q \times \Sigma \cup \{\epsilon\} \to \mathcal{P}(Q)$ is a transition function,
+        \item $q_0 \in Q$ is the start state,
+        \item $F \subseteq Q$ is a set of final states.
+    \end{enumerate}
+\end{definition}
+
+We have implemented these definitions as closely as possible in the data type definitions below. There are a couple of things to note about this. 
+First, notice how the $\delta^{DFA}$ function maps a tuple of type "state" and "symbol" to the type "Maybe state". The reason for 
+this is that $\delta^{DFA}$ can be a partial function, potentially leading to exceptions when excecuting functions call the transition function. To handle 
+such exceptions more easily we implement $\delta^{DFA}$ to map to "Maybe state", returning "Nothing" whenever the function is not defined for a particular
+combination of $(st, sy)$. We make the necessary steps to and from the "Maybe" context within the functions requiring such conversions themselves.
+Second, $\delta^{NFA}$ maps a tuple of type "state" and "Maybe symbol" to the type "list of state". We choose to represent $\Sigma \cup \{\epsilon\}$ using 
+"Maybe symbol" as it provides the additional value to the alphabet by which we can represent $\epsilon$-transitions. Here too we make the conversion to and
+from "Maybe" within the functions that require these conversions themselves.
 
 \begin{code}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 module DfaAndNfa where
 
-import Test.QuickCheck
+-- import Test.QuickCheck
 import Data.Maybe ( fromMaybe )
 
 data DFA state symbol = DFA
@@ -27,43 +57,28 @@ data NFA state symbol = NFA
                     , finalNFA :: [state]
                     }
 
-{-
--- Show instance for DFA
-instance (Show state, Show symbol) => Show (DFA state symbol) where
-    show :: (Show state, Show symbol) => DFA state symbol -> String
-    show dfa = "DFA {\n" ++
-               "  statesDFA = " ++ show (statesDFA dfa) ++ ",\n" ++
-               "  alphabetDFA = " ++ show (alphabetDFA dfa) ++ ",\n" ++
-               "  transitionDFA = fromJust . flip lookup " ++ show (transitionListDFA dfa) ++ ",\n" ++
-               "  beginDFA = " ++ show (beginDFA dfa) ++ ",\n" ++
-               "  finalDFA = " ++ show (finalDFA dfa) ++ "\n" ++ 
-               "}" 
-                where 
-                    transitionListDFA :: DFA state symbol -> [((state,symbol),state)]
-                    transitionListDFA = undefined
-
--- Show instance for NFA
-instance (Show state, Show symbol) => Show (NFA state symbol) where
-    show :: (Show state, Show symbol) => NFA state symbol -> String
-    show nfa = "NFA {"++
-               "  statesNFA = " ++ show (statesNFA nfa) ++ ",\n" ++
-               "  alphabetNFA = " ++ show (alphabetNFA nfa) ++ ",\n" ++
-               "  transitionNFA = fromMaybe [] $ lookup " ++ show (transitionListNFA nfa) ++
-               "  beginNFA = " ++ show (beginNFA nfa) ++ 
-               "  finalNFA = " ++ show (finalNFA nfa) ++
-               "}"
-               where
-                    transitionListNFA :: NFA state symbol -> [((state,symbol), [state])]
-                    transitionListNFA = undefined
--}
-
-
+-- Dummy DFA for testing purposes
 testDFA :: DFA Integer Char
-testDFA = DFA [1,2] "ab" (`lookup` [((1,'a'), 1), ((1,'b'), 2)])  1 [2]
+testDFA = DFA   [1,2] 
+                "ab" 
+                (`lookup` [((1,'a'), 1), ((1,'b'), 2)])
+                1
+                [2]
+                
+-- Dummy NFA for testing purposes
 testNFA :: NFA Integer Char
-testNFA = NFA [1,2,3] "ab" (\(st,sy) -> fromMaybe [] $ lookup (st,sy) [((1, Just 'a'), [1]), ((1, Just 'b'), [1,2]), ((1, Nothing), [2]), ((2, Just 'a'), [2]), ((2,Just 'b'), [2]), ((2, Nothing), [3]), ((3, Just 'a'), [2]), ((3, Nothing), [1])])  1 [2]
+testNFA = NFA   [1,2,3] 
+                "ab" 
+                (\(st,sy) -> fromMaybe [] $ lookup (st,sy) 
+                    [ ((1, Just 'a'), [1]), ((1, Just 'b'), [1,2])
+                    , ((1, Nothing), [2]), ((2, Just 'a'), [2])
+                    , ((2,Just 'b'), [2]), ((2, Nothing), [3])
+                    , ((3, Just 'a'), [2]), ((3, Nothing), [1])]
+                )  
+                1 
+                [2]
 
-
+-- evaluate function for DFA. Checks whether a given string of symbols results in a final state. 
 evaluateDFA :: forall state symbol . Eq state => DFA state symbol -> [symbol] -> Bool
 evaluateDFA (DFA _ _ delta begin final) syms = case walkDFA (Just begin) syms of
     Nothing -> False
@@ -84,13 +99,11 @@ epsilonClosure nfa x = closing [] [x] where
         | y `elem` visited = closing visited ys
         | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))
 
-
 -- This is U_{x in xs} epsilonClosure nfa x
 epsilonClosureSet :: Eq state => NFA state symbol -> [state] -> [state]
 epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
 
 -- Implementation from here: https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton
-
 evaluateNFA :: forall state symbol . Eq state => NFA state symbol -> [symbol] -> Bool
 evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (reverse syms)) where
     walkNFA :: state -> [symbol] -> [state]
@@ -102,6 +115,7 @@ evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA (beginNFA nfa) (revers
         -- delta*(q, w)
         walkNFA' = walkNFA q w
 
+-- Secondary evaluate function for NFAs. There is some error in one of the two, but we have yet to find out which.
 evaluateNFA' :: forall state symbol . Eq state => NFA state symbol -> [symbol] -> Bool
 evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
     walkNFA :: [state] -> [symbol] -> [state]
@@ -110,4 +124,46 @@ evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) 
         transition q = transitionNFA nfa (q, Just s)
         epsilonClosureStates = epsilonClosureSet nfa states
 
+{-
+--TODO: 
+-- Arbitrary instance for DFA. This is necessary for implementing the autotests.
+instance Arbitrary DFA state symbol where
+arbitrary :: Gen DFA state symbol
+arbitrary = undefined
+
+-- Arbitrary instance for NFA. This is necessary for implementing the autotests.
+instance Arbitrary NFA state symbol where
+arbitrary :: Gen NFA state symbol
+arbitrary = undefined
+
+-- Show instance for DFA
+instance (Show state, Show symbol) => Show (DFA state symbol) where
+    show :: (Show state, Show symbol) => DFA state symbol -> String
+    show dfa = "DFA {\n" ++
+               "  statesDFA = " ++ show (statesDFA dfa) ++ ",\n" ++
+               "  alphabetDFA = " ++ show (alphabetDFA dfa) ++ ",\n" ++
+               "  transitionDFA = fromJust . flip lookup " ++ show (transitionListDFA dfa) ++ ",\n" ++
+               "  beginDFA = " ++ show (beginDFA dfa) ++ ",\n" ++
+               "  finalDFA = " ++ show (finalDFA dfa) ++ "\n" ++ 
+               "}" 
+                where 
+                    -- Generates lookup table
+                    transitionListDFA :: DFA state symbol -> [((state,symbol),state)]
+                    transitionListDFA = undefined
+
+-- Show instance for NFA
+instance (Show state, Show symbol) => Show (NFA state symbol) where
+    show :: (Show state, Show symbol) => NFA state symbol -> String
+    show nfa = "NFA {"++
+               "  statesNFA = " ++ show (statesNFA nfa) ++ ",\n" ++
+               "  alphabetNFA = " ++ show (alphabetNFA nfa) ++ ",\n" ++
+               "  transitionNFA = fromMaybe [] $ lookup " ++ show (transitionListNFA nfa) ++
+               "  beginNFA = " ++ show (beginNFA nfa) ++ 
+               "  finalNFA = " ++ show (finalNFA nfa) ++
+               "}"
+               where
+                    -- Generates lookup table
+                    transitionListNFA :: NFA state symbol -> [((state,symbol), [state])]
+                    transitionListNFA = undefined
+-}
 \end{code}
