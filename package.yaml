@@ -23,8 +23,8 @@ executables:
       - FP
 
 tests:
-  simpletests:
-    main: simpletests.lhs
+  tests:
+    main: tests.lhs
     source-dirs: test
     dependencies:
       - FP

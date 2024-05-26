@@ -10,7 +10,5 @@ cradle:
       component: "FP:exe:myprogram"
 
     - path: "./test"
-      component: "FP:test:simpletests"
-    
-    # - path: "./zz_haskellCode"
-    #   component:  'FP.zz_haskellCode'
+      component: "FP:test:tests"
+

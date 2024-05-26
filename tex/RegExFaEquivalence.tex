@@ -1,0 +1,12 @@
+\section{Equivalence of finite automata and regular expressions}\label{sec:equivalence_regex_fa}
+
+In this section, our goal is to implement the constructive proof of Theorem 1.54 from~\cite{sipser2012}.
+
+\begin{theorem}
+    A language is regular if and only if it is described by a regular expression.
+\end{theorem}
+
+In \S~\ref{subsec:RegToNfa}, we implement the construction of an NFA from a regular expression 
+to show that if a language is described by a regular expression, then it is regular.
+Next, in \S~\ref{subsec:NfaToReg}, we implement the construction of a regular expression from a given NFA
+to prove that if a language is regular, then it is described by a regular expression.

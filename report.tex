@@ -1,5 +1,6 @@
 \documentclass[12pt,a4paper]{article}
-\input{latexmacros.tex}
+\input{tex/latexmacros.tex}
+\usepackage{csquotes}
 
 \title{My Report}
 \author{Me}
@@ -11,10 +12,7 @@
 \maketitle
 
 \begin{abstract}
-We give a toy example of a report in \emph{literate programming} style.
-The main advantage of this is that source code and documentation can
-be written and presented next to each other.
-We use the listings package to typeset Haskell source code nicely.
+    \ldots
 \end{abstract}
 
 \vfill
@@ -26,15 +24,25 @@ We use the listings package to typeset Haskell source code nicely.
 % We include one file for each section. The ones containing code should
 % be called something.lhs and also mentioned in the .cabal file.
 
-\input{Howto.tex}
+% \input{Howto.tex}
 
-\input{lib/Basics.lhs}
+\input{lib/DfaAndNfa.lhs}
 
-\input{exec/Main.lhs}
+\input{lib/NfaToDfa.lhs}
 
-\input{test/simpletests.lhs}
+\input{lib/RegExp.lhs}
 
-\input{Conclusion.tex}
+\input{tex/RegExFaEquivalence.tex}
+
+\input{lib/RegToNfa.lhs}
+
+\input{lib/NfaToReg.lhs}
+
+% \input{exec/Main.lhs}
+
+\input{test/tests.lhs}
+
+\input{tex/Conclusion.tex}
 
 \addcontentsline{toc}{section}{Bibliography}
 \bibliographystyle{alpha}
