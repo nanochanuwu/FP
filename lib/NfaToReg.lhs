@@ -1,4 +1,4 @@
-\section{Kleene's Algorithm} \label{sec:NfaToReg}
+\subsection{Converting NFAs to regular expressions: Kleene's Algorithm}\label{subsec:NfaToReg}
 
 We implement Kleene's Algorithm to convert a given Nfa to
 an equivalent Regular-Expression.
