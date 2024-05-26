@@ -60,7 +60,7 @@ Formally, the language described by a regular expression $R$ over $\Sigma$ is de
 and consists exactly of the strings over $\Sigma$ that match $R$:
 intuitively, these are the strings that match the pattern specified by $R$,
 where all operators are interpreted in the obvious way, and the $*$ stands for
-``arbitrary number of repetitions of the pattern``.
+\enquote{arbitrary number of repetitions of the pattern}.
 
 \begin{definition}
     Let $R$ be a regular expression and $s$ a string, over the same alphabet $\Sigma$. We say that $s$ matches $R$ if:
@@ -75,7 +75,7 @@ where all operators are interpreted in the obvious way, and the $*$ stands for
 \end{definition}
 
 The following function implements matching in a straightforward way.
-In our tests, it will essentially play the same role as the \texttt{evaluateDFA} and \texttt{evaluateNFA} function,
+In our tests, it will essentially play the same role as the \texttt{evaluateDFA} and \texttt{evaluateNFA} functions,
 and we will use it to check whether (supposedly) equivalent automata and regular expressions do accept/match the same strings.
 
 \begin{code}
@@ -91,20 +91,23 @@ matches str re = case re of
         allNonEmptySplittings s = [ splitAt k s | k <- [1..n] ] where n = length s 
 \end{code}
 
-Next, we implement a function to simplify regular expressions using some algebraic identities.
+Next, we implement a function to simplify regular expressions using some algebraic identities\footnote{
+    Which we will state here for the final version of the report.
+}.
 Note that this function does not minimize a given regular expression\footnote{
     This is a very hard computational problem, see e.g. \ldots
 } but it is useful in improving its readability,
 especially for the regular expressions that we will obtain by converting NFAs.
-% todo: find appropriate reference
+Moreover, since the conversions are very inefficient and result in very large regular expressions,
+simplifying them will help speed up the tests.
 
 \begin{code}
-simplify :: forall sym . Eq sym => RegExp sym -> RegExp sym
+simplify :: Eq sym => RegExp sym -> RegExp sym
 simplify re -- repeatedly apply the one-step simplify function until a fixed point is reached
     | oneStepSimplify re == re = re 
     | otherwise = simplify $ oneStepSimplify re
     where
-        oneStepSimplify :: RegExp sym -> RegExp sym
+        oneStepSimplify :: Eq sym => RegExp sym -> RegExp sym
         oneStepSimplify Empty = Empty
         oneStepSimplify Epsilon = Epsilon
         oneStepSimplify (Literal l) = Literal l
@@ -128,6 +131,8 @@ simplify re -- repeatedly apply the one-step simplify function until a fixed poi
 \end{code}
 
 Finally, we implement a way to generate random regular expressions using QuickCheck. 
+We try to keep their size relatively small so that the NFA to regular expression conversion 
+does not take too long.
 
 \begin{code}
 instance Arbitrary sym => Arbitrary (RegExp sym) where
@@ -136,8 +141,8 @@ instance Arbitrary sym => Arbitrary (RegExp sym) where
     randomRegExp :: Int -> Gen (RegExp sym)
     randomRegExp 0 = oneof [ Literal <$> (arbitrary :: Gen sym), return Epsilon, return Empty ]
     randomRegExp n = oneof [ Literal <$> (arbitrary :: Gen sym), return Epsilon 
-                        , Or <$> randomRegExp (n `div` 2) <*> randomRegExp (n `div` 2)
-                        , Concat <$> randomRegExp (n `div` 2) <*> randomRegExp (n `div` 2)
-                        , Star <$> randomRegExp (n `div` 2)
+                        , Or <$> randomRegExp (n `div` 10) <*> randomRegExp (n `div` 10)
+                        , Concat <$> randomRegExp (n `div` 10) <*> randomRegExp (n `div` 10)
+                        , Star <$> randomRegExp (n `div` 10)
                         ]
 \end{code}
