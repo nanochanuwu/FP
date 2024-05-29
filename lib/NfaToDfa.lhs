@@ -13,7 +13,7 @@ import DfaAndNfa
       NFA(NFA, transitionNFA),
       epsilonClosure )
 import Data.Maybe ( fromMaybe, mapMaybe )
-import Data.List ( intersect, nub )
+import Data.List ( intersect, nub, sort )
 \end{code}
 
 We straight forwardly implement the powersetconstruction . Here, we translate a NFA, $N=(Q,\Sigma , T, q_0, F)$, 

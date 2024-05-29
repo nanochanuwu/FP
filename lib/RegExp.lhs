@@ -17,7 +17,7 @@ It is also often useful to use the abbreviation $R^+ := R \cup R^*$.
 The following data type definition implements the \texttt{RegExp} type by closely following its formal definition.
 Together with the binary union (\texttt{Or}) and concatenation (\texttt{Concat}) operators, we also define their $n$-ary versions for convenience, as well as the \texttt{oneOrMore} abbreviation for $+$.
 Finally, we implement a function for displaying regular expressions in a more readable format\footnote{
-    This technically operates under the assumption that the alphabet does not contain \texttt{*} or \texttt{+} or the parentheses symbols,
+    This technically operates under the assumption that the alphabet does not contain \texttt{*} or \texttt{+} or the parentheses symbolbols,
     which would make the \texttt{prettyPrint} output ambiguous. Since the only purpose of this function is to display regular expressions in a readable format,
     however, we choose to simply ignore the issue.}.
 
@@ -29,24 +29,24 @@ module RegExp where
 
 import Test.QuickCheck ( Arbitrary(arbitrary), Gen, oneof, sized )
 
-data RegExp sym = Empty
+data RegExp symbol = Empty
                 | Epsilon
-                | Literal sym
-                | Or (RegExp sym) (RegExp sym)
-                | Concat (RegExp sym) (RegExp sym)
-                | Star (RegExp sym)
+                | Literal symbol
+                | Or (RegExp symbol) (RegExp symbol)
+                | Concat (RegExp symbol) (RegExp symbol)
+                | Star (RegExp symbol)
                 deriving (Eq,Show)
 
-oneOrMore :: RegExp sym -> RegExp sym
+oneOrMore :: RegExp symbol -> RegExp symbol
 oneOrMore re = re `Concat` Star re
 
-orAll :: [RegExp sym] -> RegExp sym
+orAll :: [RegExp symbol] -> RegExp symbol
 orAll = foldr Or Empty
 
-concatAll :: [RegExp sym] -> RegExp sym 
+concatAll :: [RegExp symbol] -> RegExp symbol 
 concatAll = foldr Concat Epsilon
 
-prettyPrint :: Show sym => RegExp sym -> String
+prettyPrint :: Show symbol => RegExp symbol -> String
 prettyPrint re = case re of
     Empty -> "\2205"                                            -- unicode for \varnothing
     Epsilon -> "\0949"                                          -- unicode for \varepsilon
@@ -79,7 +79,7 @@ In our tests, it will essentially play the same role as the \texttt{evaluateDFA}
 and we will use it to check whether (supposedly) equivalent automata and regular expressions do accept/match the same strings.
 
 \begin{code}
-matches :: Eq sym => [sym] -> RegExp sym -> Bool
+matches :: Eq symbol => [symbol] -> RegExp symbol -> Bool
 matches str re = case re of
     Empty -> False
     Epsilon -> null str
@@ -102,12 +102,12 @@ Moreover, since the conversions are very inefficient and result in very large re
 simplifying them will help speed up the tests.
 
 \begin{code}
-simplify :: Eq sym => RegExp sym -> RegExp sym
+simplify :: Eq symbol => RegExp symbol -> RegExp symbol
 simplify re -- repeatedly apply the one-step simplify function until a fixed point is reached
     | oneStepSimplify re == re = re 
     | otherwise = simplify $ oneStepSimplify re
     where
-        oneStepSimplify :: Eq sym => RegExp sym -> RegExp sym
+        oneStepSimplify :: Eq symbol => RegExp symbol -> RegExp symbol
         oneStepSimplify Empty = Empty
         oneStepSimplify Epsilon = Epsilon
         oneStepSimplify (Literal l) = Literal l
@@ -131,16 +131,17 @@ simplify re -- repeatedly apply the one-step simplify function until a fixed poi
 \end{code}
 
 Finally, we implement a way to generate random regular expressions using QuickCheck. 
-We try to keep their size relatively small so that the NFA to regular expression conversion 
+We try to keep their size relatively small so that 
+testing that the conversion from regular expression to NFA and back results in an equivalent regular expression
 does not take too long.
 
 \begin{code}
-instance Arbitrary sym => Arbitrary (RegExp sym) where
-  arbitrary :: Arbitrary sym => Gen (RegExp sym)
+instance Arbitrary symbol => Arbitrary (RegExp symbol) where
+  arbitrary :: Arbitrary symbol => Gen (RegExp symbol)
   arbitrary = sized randomRegExp where
-    randomRegExp :: Int -> Gen (RegExp sym)
-    randomRegExp 0 = oneof [ Literal <$> (arbitrary :: Gen sym), return Epsilon, return Empty ]
-    randomRegExp n = oneof [ Literal <$> (arbitrary :: Gen sym), return Epsilon 
+    randomRegExp :: Int -> Gen (RegExp symbol)
+    randomRegExp 0 = oneof [ Literal <$> (arbitrary :: Gen symbol), return Epsilon, return Empty ]
+    randomRegExp n = oneof [ Literal <$> (arbitrary :: Gen symbol), return Epsilon 
                         , Or <$> randomRegExp (n `div` 10) <*> randomRegExp (n `div` 10)
                         , Concat <$> randomRegExp (n `div` 10) <*> randomRegExp (n `div` 10)
                         , Star <$> randomRegExp (n `div` 10)

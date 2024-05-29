@@ -19,7 +19,7 @@ main = hspec $ do
     it "- regex to nfa" $ property pRegexToNfa
     -- it "nfa to regex" $ property pNfaToRegex                   -- no Arbitrary NFA yet
     it "- regex to nfa and back" $ property pRegexToNfaAndBack    -- note that this might take very long
-    -- it "- regex to nfa to dfa" $ property pRegexToNfaToDfa     -- sometimes fails
+    it "- regex to nfa to dfa" $ property pRegexToNfaToDfa  
 
 pSimplify :: RegExp Bool -> [Bool] -> Bool
 pSimplify re s = matches s re == matches s (simplify re)

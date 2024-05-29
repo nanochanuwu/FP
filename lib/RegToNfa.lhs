@@ -1,6 +1,6 @@
 \subsection{Converting regular expressions to NFAs}\label{subsec:RegToNfa}
 
-Here, we state and implement the proof of the following lemma. 
+Here, we state and implement the construction of the proof of the following lemma. 
 Since the implementation is very straightforward, we first prove the lemma
 and then briefly discuss a few notable implementation details.
 
@@ -11,7 +11,11 @@ and then briefly discuss a few notable implementation details.
     Fix an arbitrary alphabet $\Sigma$ and let $R$ be a regular expression over $\Sigma$. 
     The proof is by induction on the structure of $R$\footnote{
         Might add some pictures? 
-    }.
+    }. 
+    The basic idea is to construct the simplest possible NFAs for the base cases of $R$, 
+    and then make clever transformations to the NFAs given by the inductive hypothesis for the inductive cases.
+    We give the full details only of some cases for brevity, 
+    and add some pictures for clarity.
 
     Case $R=\varnothing$. Then $L(R)=\varnothing$ is accepted by the NFA % states - alphabet - transition - begin - final
     $( \{q_0\} , \Sigma , \delta , q_0 , \varnothing )$ where $\delta(q,s)=\varnothing$ for every $q\in Q$ and $s\in\Sigma$.
@@ -39,15 +43,17 @@ and then briefly discuss a few notable implementation details.
     Case $R=R_1 \cup R_2$. The idea is to glue the NFAs $N_1$ and $N_2$ given by the induction hypothesis to a new start state
     which has epsilon-transitions to the start states of $N_1$ and $N_2$,
     so as to \enquote{guess} whether the input string is in $L(R_1)$ or $L(R_2)$. 
-    (Will be further explained)
+    (Picture?)
 
-    Case $R=(R_1)^*$. We add a new start and final state to the NFA $N_1$ given by the induction hypothesis,
-    with an epsilon-transition from this state to $N_1$'s start state.
-    Moreover, we add epsilon-transitions from $N_1$'s final states to $N_1$'s start state.
-    (Will be further explained)
+    Case $R=R_1^*$. We build a new NFA $N$ by adding a new start and final state to the NFA $N_1$ given by the induction hypothesis,
+    with an epsilon-transition from this state to $N_1$'s start state. 
+    This is to guarantee that $N$ accepts $\varepsilon$.
+    Moreover, we add epsilon-transitions from $N_1$'s final states to $N_1$'s start state. 
+    This is to simulate the fact that $*$ stands for \enquote{arbitrary number of repetitions of the pattern}.
+    (Picture?)
 \end{proof}
 
-The implementation of the construction described in the proof is very straightforward, with only a couple implementation details.
+The implementation of the construction described in the proof is very straightforward, with only a couple technical details.
 First, since we do not have a way to know which specific alphabet a regular expression is defined over,
 we have to manually define or augment the alphabets in each case. 
 The definition of the new transition functions slightly changes accordingly.
@@ -67,12 +73,12 @@ import DfaAndNfa ( NFA(NFA) )
 import Data.List ( union )
 import Data.Maybe ( isNothing )
 
-regexToNfa :: Eq sym => RegExp sym -> NFA Int sym
+regexToNfa :: Eq symbol => RegExp symbol -> NFA Int symbol
 regexToNfa re = fst $ regexToNfaHelper re 1 where
     -- auxiliary function used to build an NFA equivalent to the given regex
     -- its second parameter is the first available int to name the NFA's states
     -- returns the NFA built from the smaller regex's, and the next first available int
-    regexToNfaHelper :: Eq sym => RegExp sym -> Int -> (NFA Int sym, Int)
+    regexToNfaHelper :: Eq symbol => RegExp symbol -> Int -> (NFA Int symbol, Int)
     regexToNfaHelper Empty n = ( NFA [n] [] delta n [], n+1 ) where delta (_,_) = []
     regexToNfaHelper Epsilon n = ( NFA [n] [] delta n [n], n+1 ) where delta (_,_) = []
     regexToNfaHelper (Literal l) n = ( NFA [n,n+1] [l] delta n [n+1], n+2 ) where 
