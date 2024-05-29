@@ -35,7 +35,14 @@ from \texttt{Maybe} within the functions that require these conversions themselv
 {-# LANGUAGE RankNTypes #-}
 module DfaAndNfa where
 
--- import Test.QuickCheck
+import Test.QuickCheck
+    ( Arbitrary(arbitrary),
+      elements,
+      frequency,
+      listOf1,
+      sublistOf,
+      suchThat,
+      vectorOf )
 import Data.Maybe ( fromMaybe )
 
 data DFA state symbol = DFA
@@ -151,18 +158,44 @@ printNFA (NFA states alphabet transition begin final) =
         show state ++ " -- " ++ show sym ++ " --> " ++ show nextStates
     allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- Nothing : map Just alphabet, not $ null $ transition (state,sym)]
 
-{-
+
 --TODO: 
 -- Arbitrary instance for DFA. This is necessary for implementing the autotests.
-instance Arbitrary DFA state symbol where
-arbitrary :: Gen DFA state symbol
-arbitrary = undefined
+instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num symbol) => Arbitrary (DFA state symbol) where
+    arbitrary = do
+            states <- listOf1 Test.QuickCheck.arbitrary
+            let alphabet = [0,1]
+            transition <- randomTransitionDFA states alphabet
+            begin <- elements states
+            final <- sublistOf states `suchThat` (not . null)
+            return $ DFA states alphabet transition begin final
+        where 
+            randomTransitionDFA states alphabet = do
+                st <- listOf1  (elements states)
+                syms <- vectorOf (length st) (elements alphabet)
+                st' <- listOf1 (elements states)
+                let transitionTable = zip (zip st syms) st'
+                return $ \(state, symbol) -> lookup (state, symbol) transitionTable
+
 
 -- Arbitrary instance for NFA. This is necessary for implementing the autotests.
-instance Arbitrary NFA state symbol where
-arbitrary :: Gen NFA state symbol
-arbitrary = undefined
+instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num symbol) => Arbitrary (NFA state symbol) where
+    arbitrary = do
+            states <- listOf1 arbitrary
+            let alphabet = [0,1]
+            transition <- randomTransitionNFA states alphabet
+            begin <- elements states
+            final <- sublistOf states `suchThat` (not . null)
+            return $ NFA states alphabet transition begin final
+        where 
+            randomTransitionNFA states alphabet = do
+                st <- listOf1  (elements states)
+                syms <- vectorOf (length st) $ frequency [(1, return Nothing), (3, elements (map Just alphabet))]
+                stList <- listOf1 $ sublistOf states
+                let transitionTable = zip (zip st syms) stList
+                return $  \(state, symbol) -> fromMaybe [] $ lookup (state, symbol) transitionTable
 
+{-
 -- Show instance for DFA
 instance (Show state, Show symbol) => Show (DFA state symbol) where
     show :: (Show state, Show symbol) => DFA state symbol -> String
