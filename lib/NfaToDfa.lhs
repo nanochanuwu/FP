@@ -25,6 +25,10 @@ and $F\subseteq Q$ the set of final states. We define the corrsponding DFA as $D
     \item $q=T(q_0,\epsilon )$
     \item $F'= Q'\cap F$ 
 \end{itemize}
+Instead of using sets for the Powerset construction, we will use lists. 
+Therefore, we have to take care of sorting the list to not run into problems evolving from $\lbracket 0,1\rbracket$ not being the same. 
+While the definition of the alphabet, initial and acceptance states is straight forward, the definition of the transition function is a bit more involved. 
+The problems when implementing this mainly arise from having partial functions as transitions. After presenting the nfaToDfa function, we will further elaborate on this.
 
 \begin{code}
 
@@ -45,6 +49,16 @@ nfaToDfa (NFA statesN alphabetN transN startN endN) =
   in  DFA statesD alphabetD transD startD endD
 
 \end{code}
+ The function $transD$ takes a state $st$ in the new DFA  (which is a list of states in the original NFA) and a symbol $x$ and returns a state in the DFA (also a list).
+First, the lambda function $\s -> transitionNFA nfa (s, Just sy)$ is concatmapped over $st$. This gives us a list of all states reachable from the states in st by a $x-transition$. 
+In the next step, we have to add all states reachable by a $\epsilon$-transition as these are, in the original NFA, reachable without reading a symbol. 
+In the original algorithm we would be done here, but as we use lists instead of sets, we have to apply the functions $nub$ and $sort$ to make mirror the behaviour of sets in the sense that two sorted and nubbed lists are equal when they have the same elements in them.
+
+The proof that the resulting DFA accepts exactly the same strings as the original NFA works by induction on the length of the input string and is almost completely represented in the definitions of the translation. 
+The base case follows because the initial state in the DFA is the epsilon closure of the original initial staes which are exactly the states reachable given the empty string as input. 
+This mirrors the definition of the initial state and endstate. 
+The induction step uses that the states one can reach after reading a symbol $x$  is the $\epsilon-closure$ of the set of $x$-reachable states. 
+This is mirrored by the two steps in the definition of $TransD$. The complete proof can be found in any text book on automata theory.
 
 To minimize the DFA, we first find all the unreachable states and then delete them in the next step. To find all the unreachable states, we start from the initial state and then check whether there is a string
 that allows one to reach that state from the initial state. The "nextStates" function, takes a state and returns all states reachable by any character in the alphabet. We use this "nextStates" in the 
