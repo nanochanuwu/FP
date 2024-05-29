@@ -32,15 +32,15 @@ powerSetList :: [a] -> [[a]]
 powerSetList [] = [[]]
 powerSetList (x:xs) = map (x:) (powerSetList xs) ++ powerSetList xs
 
-nfaToDfa :: Eq state => NFA state symbol -> DFA [state] symbol
+nfaToDfa :: (Eq state, Ord state) => NFA state symbol -> DFA [state] symbol
 nfaToDfa (NFA statesN alphabetN transN startN endN) =
   let nfa = NFA statesN alphabetN transN startN endN
-      statesD = powerSetList statesN                                          -- new set of states
+      statesD = map sort $ powerSetList statesN                                          -- new set of states
       alphabetD = alphabetN                                                   -- same alphabet as the NFA
-      startD = epsilonClosure nfa startN                                      -- the set of all states reachable from initial states in the NFA by epsilon-moves
+      startD = sort $ epsilonClosure nfa startN                                      -- the set of all states reachable from initial states in the NFA by epsilon-moves
       endD = filter (\state -> not $ null (state `intersect` endN)) statesD   -- All states that contain an endstate.
       transD (st, sy) =                                                       -- 
-          Just $ nub $ concatMap (epsilonClosure nfa) syTransitionsForDfaStates where        -- epsilonClosure of the sy-reachable states
+          Just $ sort $ nub $ concatMap (epsilonClosure nfa) syTransitionsForDfaStates where        -- epsilonClosure of the sy-reachable states
             syTransitionsForDfaStates = concatMap (\s -> transitionNFA nfa (s, Just sy)) st  -- states reachable by sy-transitions
   in  DFA statesD alphabetD transD startD endD
 
