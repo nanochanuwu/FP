@@ -12,7 +12,7 @@ import DfaAndNfa
     ( DFA(DFA, beginDFA, transitionDFA, finalDFA, alphabetDFA),
       NFA(NFA, transitionNFA),
       epsilonClosure )
-import Data.Maybe ( fromMaybe, mapMaybe )
+import Data.Maybe ( mapMaybe, fromJust, isJust )
 import Data.List ( intersect, nub, sort )
 \end{code}
 
@@ -38,13 +38,13 @@ powerSetList (x:xs) = map (x:) (powerSetList xs) ++ powerSetList xs
 nfaToDfa :: (Eq state, Ord state) => NFA state symbol -> DFA [state] symbol
 nfaToDfa (NFA statesN alphabetN transN startN endN) =
   let nfa = NFA statesN alphabetN transN startN endN
-      statesD = map sort $ powerSetList statesN                                          -- new set of states
-      alphabetD = alphabetN                                                   -- same alphabet as the NFA
-      startD = sort $ epsilonClosure nfa startN                                      -- the set of all states reachable from initial states in the NFA by epsilon-moves
-      endD = filter (\state -> not $ null (state `intersect` endN)) statesD   -- All states that contain an endstate.
-      transD (st, sy) =                                                       -- 
-          Just $ sort $ nub $ concatMap (epsilonClosure nfa) syTransitionsForDfaStates where        -- epsilonClosure of the sy-reachable states
-            syTransitionsForDfaStates = concatMap (\s -> transitionNFA nfa (s, Just sy)) st  -- states reachable by sy-transitions
+      statesD = map sort $ powerSetList statesN                                               -- new set of states
+      alphabetD = alphabetN                                                                   -- same alphabet as the NFA
+      startD = sort $ epsilonClosure nfa startN                                               -- the set of all states reachable from initial states in the NFA by epsilon-moves
+      endD = filter (\state -> not $ null (state `intersect` endN)) statesD                   -- All states that contain an endstate.
+      transD (st, sy) =                                                        
+          Just $ sort $ nub $ concatMap (epsilonClosure nfa) syTransitionsForDfaStates where  -- epsilonClosure of the sy-reachable states
+            syTransitionsForDfaStates = concatMap (\s -> transitionNFA nfa (s, Just sy)) st   -- states reachable by sy-transitions
   in  DFA statesD alphabetD transD startD endD
 
 \end{code}
@@ -79,12 +79,10 @@ findReachableStatesDFA dfa initialStates = nub $ closing [] initialStates where
   nextStates :: state -> [state]
   nextStates state = mapMaybe (\sym -> transitionDFA dfa (state, sym)) (alphabetDFA dfa) -- checks for the next states following "state" for any symbol
 
--- Function to remove unreachable states from a DFA
 removeUnreachableStates :: (Eq state, Eq symbol) => DFA state symbol -> DFA state symbol
 removeUnreachableStates dfa = DFA reachableStates (alphabetDFA dfa) newTransition (beginDFA dfa) newFinalStates where
   reachableStates = findReachableStatesDFA dfa [beginDFA dfa] -- Other states cannot play a role in the evaluation of strings
-  transitionsToReachables = [((s, a), transitionDFA dfa (s, a)) | s <- reachableStates, a <- alphabetDFA dfa]
-  newTransition (s, a) = fromMaybe (error "Invalid transition") (lookup (s, a) transitionsToReachables)
+  transitionsToReachables = [ ((s, a), fromJust $ transitionDFA dfa (s, a)) | s <- reachableStates, a <- alphabetDFA dfa, isJust $ transitionDFA dfa (s, a) ]
+  newTransition (s, a) =  lookup (s,a) transitionsToReachables
   newFinalStates = filter (`elem` reachableStates) (finalDFA dfa)
-
 \end{code}
