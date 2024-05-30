@@ -39,12 +39,11 @@ from \texttt{Maybe} within the functions that require these conversions themselv
 module DfaAndNfa where
 
 import Data.Maybe ( fromMaybe )
-import Test.QuickCheck( Arbitrary(arbitrary), Gen, elements, frequency, listOf1, sublistOf, suchThat, vectorOf )
+import Test.QuickCheck( Arbitrary(arbitrary), Gen, elements, frequency, listOf1, sublistOf, suchThat, vectorOf, chooseInt )
 
 data DFA state symbol = DFA
                     { statesDFA :: [state]
-                    , alphabetDFA :: [symbol]
-                                                
+                    , alphabetDFA :: [symbol]          
                     , transitionDFA :: (state,symbol) -> Maybe state
                     , beginDFA :: state
                     , finalDFA :: [state]
@@ -132,8 +131,11 @@ evaluateDFA (DFA _ _ delta begin final) syms = case walkDFA (Just begin) syms of
         walkDFA (Just q) (s:ss) = case delta (q,s) of
             Nothing -> Nothing
             Just q' -> walkDFA (Just q') ss
+\end{code}
 
--- Close the set {x} under epsilon-arrows
+Documentation here 
+
+\begin{code}
 epsilonClosure :: forall state symbol . Eq state => NFA state symbol -> state -> [state]
 epsilonClosure nfa x = closing [] [x] where
     closing :: [state] -> [state] -> [state]
@@ -168,7 +170,6 @@ evaluateNFA' nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) 
 Documentation here
 
 \begin{code}
--- Pretty print function for DFA
 printDFA :: (Show state, Show symbol) => DFA state symbol -> String
 printDFA (DFA states alphabet transition begin final) =
     "States: " ++ show states ++ "\n" ++
@@ -181,7 +182,6 @@ printDFA (DFA states alphabet transition begin final) =
         show state ++ " -- " ++ show sym ++ " --> " ++ show nextState
     allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- alphabet ]
 
--- Pretty print function for DFA
 printNFA :: (Show state, Show symbol) => NFA state symbol -> String
 printNFA (NFA states alphabet transition begin final) =
     "States: " ++ show states ++ "\n" ++
@@ -200,17 +200,21 @@ printNFA (NFA states alphabet transition begin final) =
 Documentation here
 
 \begin{code}
--- Arbitrary instance for DFA. This is necessary for implementing the autotests.
 instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num state, Ord state) => Arbitrary (DFA state symbol) where
     arbitrary :: (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol) => Gen (DFA state symbol)
     arbitrary = do
-            states <- vectorOf 10 (arbitrary :: Gen state) -- generates a nonempty list of arbitrary states
-            alphabet <- vectorOf 2 (arbitrary :: Gen symbol)-- generates a vector of length 2 of arbitrary symbols
+            n <- chooseInt (1,100)
+            states <- vectorOf n (arbitrary :: Gen state) -- generates a nonempty list of arbitrary states
+            alphabet <- uniqueAlphabet -- generates a vector of length 2 of arbitrary symbols
             transition <- randomTransitionDFA states alphabet -- generates the arbitrary transition function with the appropriate type
             begin <- elements states -- takes an random element in the list of states to be the begin state
             final <- sublistOf states `suchThat` (not . null) -- takes a nonempty sublist of the states to be designated final states
             return $ DFA states alphabet transition begin final -- injects the arbitrary DFA into the Gen mondad
         where 
+            uniqueAlphabet = do
+                x <- (arbitrary :: Gen symbol)
+                y <- (arbitrary :: Gen symbol) `suchThat` (/= x)
+                return [x, y]
             -- helper function to generate the transition function of arbitrary DFA
             randomTransitionDFA states alphabet = do
                 st <- listOf1  (elements states) -- generates a non-empty list consisting of (possibly duplicate) elements of the list of states
@@ -219,21 +223,24 @@ instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num state, Ord
                 let transitionTable = zip (zip st syms) st' -- creates the transistion table
                 return $ \(state, symbol) -> lookup (state, symbol) transitionTable -- injects the arbitrary transition function into the Gen monad
 
-
--- Arbitrary instance for NFA. This is necessary for implementing the autotests.
 instance (Arbitrary symbol, Eq symbol) => Arbitrary (NFA Int symbol) where
     arbitrary :: (Arbitrary symbol, Eq symbol) => Gen (NFA Int symbol)
     arbitrary = do
-            let states = [1..9] -- generates a nonempty list of arbitrary states
-            alphabet <- vectorOf 2 (arbitrary :: Gen symbol) -- generates a vector of length 2 of arbitrary symbols
+            n <- chooseInt (1,5)
+            let states = [1..n] -- generates a nonempty list of arbitrary states
+            alphabet <- uniqueAlphabet -- generates a vector of length 2 of arbitrary symbols
             transition <- randomTransitionNFA states alphabet -- generates the arbitrary transition function with the appropriate type
             begin <- elements states -- takes an random element in the list of states to be the begin state
             final <- sublistOf states `suchThat` (not . null) -- takes a nonempty sublist of the states to be designated final states
             return $ NFA states alphabet transition begin final -- injects the arbitrary DFA into the Gen mondad
         where 
+            uniqueAlphabet = do
+                x <- (arbitrary :: Gen symbol)
+                y <- (arbitrary :: Gen symbol) `suchThat` (/= x)
+                return [x, y]
             randomTransitionNFA states alphabet = do
                 st <- listOf1  (elements states) -- generates a non-empty list consisting of (possibly duplicate) elements of the list of states
-                syms <- vectorOf (length st) $ frequency [(1, return Nothing), (3, elements (map Just alphabet))] -- generates a vector of the length of st where the elements are either Nothing or a Just element in the alphabet
+                syms <- vectorOf (length st) $ frequency [(1, return Nothing), (20, elements (map Just alphabet))] -- generates a vector of the length of st where the elements are either Nothing or a Just element in the alphabet
                 stList <- listOf1 $ sublistOf states -- generates a non-empty list consisting of subsets of the list of states
                 let transitionTable = zip (zip st syms) stList -- creates the transistion table
                 return $  \(state, symbol) -> fromMaybe [] $ lookup (state, symbol) transitionTable -- injects the arbitrary transition function into the Gen monad

@@ -5,42 +5,27 @@
 
 module Main where
 
-import DfaAndNfa ( evaluateDFA, evaluateNFA, NFA )
+import DfaAndNfa ( evaluateDFA, evaluateNFA, NFA, DFA )
 import RegExp ( RegExp, matches, simplify )
 import RegToNfa (regexToNfa)
 import NfaToReg (nfaToReg)
-import NfaToDfa (nfaToDfa)
+import NfaToDfa (nfaToDfa, removeUnreachableStates)
 
-import Test.Hspec ( hspec, describe, it )
-import Test.QuickCheck ( Testable(property) )
+import Test.Hspec ( hspec, describe )
+import Test.Hspec.QuickCheck( prop )
+import Test.QuickCheck ( (==>) )
 
 main :: IO ()
 main = hspec $ do
   describe "Regular languages: finite automata and regular expressions" $ do
-    it "- simplify regex" $ property pSimplify
-    it "- regex to nfa" $ property pRegexToNfa
-    -- it "- nfa to regex" $ property pNfaToRegex                   
-    -- it "- regex to nfa and back" $ property pRegexToNfaAndBack   
-    it "- regex to nfa to dfa" $ property pRegexToNfaToDfa  
-    it "- nfa to dfa" $ property pNfaToDfa
-
-pSimplify :: RegExp Bool -> [Bool] -> Bool
-pSimplify re s = matches s re == matches s (simplify re)
-
-pRegexToNfa :: RegExp Bool -> [Bool] -> Bool
-pRegexToNfa re s = matches s (simplify re) == evaluateNFA (regexToNfa $ simplify re) s
-
-pNfaToRegex :: NFA Int Bool -> [Bool] -> Bool
-pNfaToRegex nfa s = evaluateNFA nfa s == matches s (simplify $ nfaToReg nfa)
-
-pRegexToNfaAndBack :: RegExp Bool -> [Bool] -> Bool
-pRegexToNfaAndBack re s = matches s (simplify re) == matches s ( (simplify . nfaToReg . regexToNfa ) re )
-
-pRegexToNfaToDfa :: RegExp Bool -> [Bool] -> Bool
-pRegexToNfaToDfa re s = matches s (simplify re) == evaluateDFA ( ( nfaToDfa . regexToNfa . simplify ) re) s
-
-pNfaToDfa :: NFA Int Bool -> [Bool] -> Bool
-pNfaToDfa nfa s = evaluateNFA nfa s == evaluateDFA (nfaToDfa nfa) s
+    prop "- simplify regex" $ \(re :: RegExp Bool) s -> length s <= 100 ==> matches s re == matches s (simplify re)
+    prop "- regex to nfa" $ \(re :: RegExp Bool) s -> length s <= 100 ==> matches s (simplify re) == evaluateNFA (regexToNfa $ simplify re) s
+    prop "- nfa to regex" $ \(nfa :: NFA Int Bool) s -> length s <= 10 ==> evaluateNFA nfa s == matches s (simplify $ nfaToReg nfa)              
+    prop "- regex to nfa and back" $ \(re :: RegExp Bool) s -> length s <= 20 ==> matches s (simplify re) == matches s ( (simplify . nfaToReg . regexToNfa ) re )   
+    prop "- nfa to regex and back" $ \(nfa :: NFA Int Bool) s -> length s <= 10 ==> evaluateNFA nfa s == evaluateNFA ((regexToNfa . simplify . nfaToReg) nfa) s
+    prop "- regex to nfa to dfa" $ \(nfa :: NFA Int Bool) s -> length s <= 10 ==> evaluateNFA nfa s == evaluateNFA ((regexToNfa . simplify . nfaToReg) nfa) s  
+    prop "- nfa to dfa" $ \(nfa :: NFA Int Bool) s -> length s <= 25 ==> evaluateNFA nfa s == evaluateDFA (nfaToDfa nfa) s
+    prop "- minimize dfa" $ \(dfa :: DFA Int Bool) s -> length s <= 50 ==> evaluateDFA dfa s == evaluateDFA (removeUnreachableStates dfa) s
 \end{code}
 
 To run the tests, use \verb|stack test|.
