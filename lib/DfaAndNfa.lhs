@@ -33,10 +33,14 @@ from \texttt{Maybe} within the functions that require these conversions themselv
 \begin{code}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module DfaAndNfa where
 
 import Test.QuickCheck
     ( Arbitrary(arbitrary),
+      Gen,
       elements,
       frequency,
       listOf1,
@@ -54,7 +58,6 @@ data DFA state symbol = DFA
                     , beginDFA :: state
                     , finalDFA :: [state]
                     }
-
 
 data NFA state symbol = NFA
                     { statesNFA :: [state]
@@ -161,10 +164,11 @@ printNFA (NFA states alphabet transition begin final) =
 
 
 -- Arbitrary instance for DFA. This is necessary for implementing the autotests.
-instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol) => Arbitrary (DFA state symbol) where
+instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num state, Ord state) => Arbitrary (DFA state symbol) where
+    arbitrary :: (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol) => Gen (DFA state symbol)
     arbitrary = do
-            states <- listOf1 Test.QuickCheck.arbitrary -- generates a nonempty list of arbitrary states
-            alphabet <- vectorOf 2 Test.QuickCheck.arbitrary -- generates a vector of length 2 of arbitrary symbols
+            states <- vectorOf 10 (arbitrary :: Gen state) -- generates a nonempty list of arbitrary states
+            alphabet <- vectorOf 2 (arbitrary :: Gen symbol)-- generates a vector of length 2 of arbitrary symbols
             transition <- randomTransitionDFA states alphabet -- generates the arbitrary transition function with the appropriate type
             begin <- elements states -- takes an random element in the list of states to be the begin state
             final <- sublistOf states `suchThat` (not . null) -- takes a nonempty sublist of the states to be designated final states
@@ -180,10 +184,11 @@ instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol) => Arbitrary (
 
 
 -- Arbitrary instance for NFA. This is necessary for implementing the autotests.
-instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num symbol) => Arbitrary (NFA state symbol) where
+instance (Arbitrary symbol, Eq symbol) => Arbitrary (NFA Int symbol) where
+    arbitrary :: (Arbitrary symbol, Eq symbol) => Gen (NFA Int symbol)
     arbitrary = do
-            states <- listOf1 arbitrary -- generates a nonempty list of arbitrary states
-            alphabet <- vectorOf 2 Test.QuickCheck.arbitrary -- generates a vector of length 2 of arbitrary symbols
+            let states = [1..9] -- generates a nonempty list of arbitrary states
+            alphabet <- vectorOf 2 (arbitrary :: Gen symbol) -- generates a vector of length 2 of arbitrary symbols
             transition <- randomTransitionNFA states alphabet -- generates the arbitrary transition function with the appropriate type
             begin <- elements states -- takes an random element in the list of states to be the begin state
             final <- sublistOf states `suchThat` (not . null) -- takes a nonempty sublist of the states to be designated final states
@@ -197,7 +202,6 @@ instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num symbol) =>
                 return $  \(state, symbol) -> fromMaybe [] $ lookup (state, symbol) transitionTable -- injects the arbitrary transition function into the Gen monad
 
 {-
-TO DO:
 -- Show instance for DFA
 instance (Show state, Show symbol) => Show (DFA state symbol) where
     show :: (Show state, Show symbol) => DFA state symbol -> String
@@ -228,4 +232,12 @@ instance (Show state, Show symbol) => Show (NFA state symbol) where
                     transitionListNFA :: NFA state symbol -> [((state,symbol), [state])]
                     transitionListNFA = undefined
 -}
+
+instance (Show state, Show symbol) => Show (NFA state symbol) where
+    show :: (Show state, Show symbol) => NFA state symbol -> String
+    show = printNFA
+
+instance (Show state, Show symbol) => Show (DFA state symbol) where
+    show :: (Show state, Show symbol) => DFA state symbol -> String
+    show = printDFA
 \end{code}
