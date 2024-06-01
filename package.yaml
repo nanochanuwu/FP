@@ -1,8 +1,7 @@
 name: FP
-version: 0.1.0.0
-synopsis: My Haskell project
+version: 1.0.0.0
+synopsis: Regular languages in Haskell. Finite automata and regular expressions
 description: See FP.pdf
-maintainer: My Name <my.email@example.com>
 category: Logic
 
 ghc-options: -Wall

@@ -9,13 +9,10 @@ and then briefly discuss a few notable implementation details.
 \end{lemma}
 \begin{proof}
     Fix an arbitrary alphabet $\Sigma$ and let $R$ be a regular expression over $\Sigma$. 
-    The proof is by induction on the structure of $R$\footnote{
-        Might add some pictures? 
-    }. 
+    The proof is by induction on the structure of $R$.
     The basic idea is to construct the simplest possible NFAs for the base cases of $R$, 
     and then make clever transformations to the NFAs given by the inductive hypothesis for the inductive cases.
-    We give the full details only of some cases for brevity, 
-    and add some pictures for clarity.
+    We give the full details only of some cases for brevity.
 
     Case $R=\varnothing$. Then $L(R)=\varnothing$ is accepted by the NFA % states - alphabet - transition - begin - final
     $( \{q_0\} , \Sigma , \delta , q_0 , \varnothing )$ where $\delta(q,s)=\varnothing$ for every $q\in Q$ and $s\in\Sigma$.
@@ -43,14 +40,12 @@ and then briefly discuss a few notable implementation details.
     Case $R=R_1 \cup R_2$. The idea is to glue the NFAs $N_1$ and $N_2$ given by the induction hypothesis to a new start state
     which has epsilon-transitions to the start states of $N_1$ and $N_2$,
     so as to \enquote{guess} whether the input string is in $L(R_1)$ or $L(R_2)$. 
-    (Picture?)
 
     Case $R=R_1^*$. We build a new NFA $N$ by adding a new start and final state to the NFA $N_1$ given by the induction hypothesis,
     with an epsilon-transition from this state to $N_1$'s start state. 
     This is to guarantee that $N$ accepts $\varepsilon$.
     Moreover, we add epsilon-transitions from $N_1$'s final states to $N_1$'s start state. 
     This is to simulate the fact that $*$ stands for \enquote{arbitrary number of repetitions of the pattern}.
-    (Picture?)
 \end{proof}
 
 The implementation of the construction described in the proof is very straightforward, with only a couple technical details.

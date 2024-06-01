@@ -16,9 +16,9 @@ It is also often useful to use the abbreviation $R^+ := R \cup R^*$.
 
 The following data type definition implements the \texttt{RegExp} type by closely following its formal definition.
 Together with the binary union (\texttt{Or}) and concatenation (\texttt{Concat}) operators, we also define their $n$-ary versions for convenience, as well as the \texttt{oneOrMore} abbreviation for $+$.
-Finally, we implement a function for displaying regular expressions in a more readable format\footnote{
+Finally, we implement a function \texttt{printRE} for displaying regular expressions in a more readable format\footnote{
     This technically operates under the assumption that the alphabet does not contain \texttt{*} or \texttt{+} or the parentheses symbolbols,
-    which would make the \texttt{prettyPrint} output ambiguous. Since the only purpose of this function is to display regular expressions in a readable format,
+    which would make the \texttt{printRE} output ambiguous. Since the only purpose of this function is to display regular expressions in a readable format,
     however, we choose to simply ignore the issue.}.
 
 \begin{code}
@@ -46,14 +46,14 @@ orAll = foldr Or Empty
 concatAll :: [RegExp symbol] -> RegExp symbol 
 concatAll = foldr Concat Epsilon
 
-prettyPrint :: Show symbol => RegExp symbol -> String
-prettyPrint re = case re of
+printRE :: Show symbol => RegExp symbol -> String
+printRE re = case re of
     Empty -> "\2205"                                            -- unicode for \varnothing
     Epsilon -> "\0949"                                          -- unicode for \varepsilon
     Literal l -> show l
-    Or re1 re2 -> "(" ++ prettyPrint re1 ++ "|" ++ prettyPrint re2 ++ ")"
-    Concat re1 re2 -> prettyPrint re1 ++ prettyPrint re2
-    Star re1 -> "(" ++ prettyPrint re1 ++ ")*"
+    Or re1 re2 -> "(" ++ printRE re1 ++ "|" ++ printRE re2 ++ ")"
+    Concat re1 re2 -> printRE re1 ++ printRE re2
+    Star re1 -> "(" ++ printRE re1 ++ ")*"
 \end{code}
 
 Formally, the language described by a regular expression $R$ over $\Sigma$ is denoted $L(R)$ 
@@ -91,15 +91,16 @@ matches str re = case re of
         allNonEmptySplittings s = [ splitAt k s | k <- [1..n] ] where n = length s 
 \end{code}
 
-Next, we implement a function to simplify regular expressions using some algebraic identities\footnote{
-    Which we will state here for the final version of the report.
-}.
+Next, we implement a function to simplify regular expressions using some simple algebraic identities, 
+that are stated as comments in the code for compactness.
 Note that this function does not minimize a given regular expression\footnote{
-    This is a very hard computational problem, see e.g. \ldots
-} but it is useful in improving its readability,
+    This is a very hard computational problem, and implementing a solution for it is outside the scope of our project.
+} but it is useful, as a simple heuristic, in improving its readability,
 especially for the regular expressions that we will obtain by converting NFAs.
 Moreover, since the conversions are very inefficient and result in very large regular expressions,
 simplifying them will help speed up the tests.
+The \texttt{simplify} function works by repeatedly applying a simple one-step simplification function
+until no further simplifications are possible.
 
 \begin{code}
 simplify :: Eq symbol => RegExp symbol -> RegExp symbol
@@ -112,28 +113,27 @@ simplify re -- repeatedly apply the one-step simplify function until a fixed poi
         oneStepSimplify Epsilon = Epsilon
         oneStepSimplify (Literal l) = Literal l
         oneStepSimplify (Or re1 re2) 
-            | re1 == Empty = oneStepSimplify re2
-            | re2 == Empty = oneStepSimplify re1
-            | re1 == re2 = oneStepSimplify re1
+            | re1 == Empty = oneStepSimplify re2    -- Empty | re2 -> re2
+            | re2 == Empty = oneStepSimplify re1  
+            | re1 == re2 = oneStepSimplify re1      -- re1 | re1 -> re1
             | otherwise = Or (oneStepSimplify re1) (oneStepSimplify re2)
         oneStepSimplify (Concat re1 re2) 
-            | re1 == Empty || re2 == Empty = Empty
-            | re1 == Epsilon = oneStepSimplify re2
+            | re1 == Empty || re2 == Empty = Empty  -- Empty `Concat` re -> Empty
+            | re1 == Epsilon = oneStepSimplify re2  -- Epsilon `Concat` re2 -> re2
             | re2 == Epsilon = oneStepSimplify re1
             | otherwise = Concat (oneStepSimplify re1) (oneStepSimplify re2)
         oneStepSimplify (Star re') = case re' of
-            Empty -> Epsilon
-            Epsilon -> Epsilon
-            Or Epsilon re2 -> Star (oneStepSimplify re2)
+            Empty -> Epsilon                                -- Empty* -> Epsilon
+            Epsilon -> Epsilon                              -- Epsilon* -> Epsilon
+            Or Epsilon re2 -> Star (oneStepSimplify re2)    -- (Epsilon | re2)* -> (re2)*
             Or re1 Epsilon -> Star (oneStepSimplify re1)
-            Star re1 -> Star (oneStepSimplify re1)
+            Star re1 -> Star (oneStepSimplify re1)          -- ((re1)*)* -> (re1)*
             _ -> Star (oneStepSimplify re')
 \end{code}
 
-Finally, we implement a way to generate random regular expressions using QuickCheck. 
+Finally, we implement a way to generate random regular expressions using QuickCheck. xw
 We try to keep their size relatively small so that 
-testing that the conversion from regular expression to NFA and back results in an equivalent regular expression
-does not take too long.
+testing that converting back and forth from regular expressions to NFAs does not take too long.
 
 \begin{code}
 instance Arbitrary symbol => Arbitrary (RegExp symbol) where

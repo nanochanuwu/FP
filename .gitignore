@@ -17,6 +17,7 @@ desktop.ini
 *.out
 *.prof
 *.synctex.gz
+*.synctex(busy)
 *.toc
 .cabal-sandbox/
 .hpc
