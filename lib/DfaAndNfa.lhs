@@ -203,8 +203,7 @@ Documentation here
 instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num state, Ord state) => Arbitrary (DFA state symbol) where
     arbitrary :: (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol) => Gen (DFA state symbol)
     arbitrary = do
-            n <- chooseInt (1,100)
-            states <- vectorOf n (arbitrary :: Gen state) -- generates a nonempty list of arbitrary states
+            states <- listOf1 (arbitrary :: Gen state) -- generates a nonempty list of arbitrary states
             alphabet <- uniqueAlphabet -- generates a vector of length 2 of arbitrary symbols
             transition <- randomTransitionDFA states alphabet -- generates the arbitrary transition function with the appropriate type
             begin <- elements states -- takes an random element in the list of states to be the begin state
@@ -226,8 +225,8 @@ instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num state, Ord
 instance (Arbitrary symbol, Eq symbol) => Arbitrary (NFA Int symbol) where
     arbitrary :: (Arbitrary symbol, Eq symbol) => Gen (NFA Int symbol)
     arbitrary = do
-            n <- chooseInt (1,5)
-            let states = [1..n] -- generates a nonempty list of arbitrary states
+            n <- chooseInt (2,5)
+            let states = [1..n] 
             alphabet <- uniqueAlphabet -- generates a vector of length 2 of arbitrary symbols
             transition <- randomTransitionNFA states alphabet -- generates the arbitrary transition function with the appropriate type
             begin <- elements states -- takes an random element in the list of states to be the begin state
