@@ -8,7 +8,7 @@ In this project, we have implemented data types for regular expressions, determi
 Haskell's type system and the Maybe monad allowed us to effectively model partial functions by using Maybe states to map arguments that have no value specified, meaning no transition for some symbols, to a dummy state. The only downside is that the models are a bit more complicated to write because one has to use the \texttt{maybeMap}. Here, one could add a a translation function that transforms a given input list to function of the right type. 
 Using the Maybe type for symbols allowed us to separately treat the $\epsilon$-transitions for NFAs by singling out an object in a non-specified type to work as $\epsilon$. 
 
-Currently, the NFA to DFA translation is split into two parts: first, we translate the DFA using the powerset construction and then minimize it. By producing the minimized DFA on-the-fly and generating only the states we can transition to without computing the entire power set, we improved the efficiency of the translation.
+Currently, the NFA to DFA translation is split into two parts: first, we translate the DFA using the powerset construction and then minimize it. By producing the minimized DFA on-the-fly and generating only the states we can transition to without computing the entire power set, we could the efficiency of the translation.
 
 Something on REGEX
 
