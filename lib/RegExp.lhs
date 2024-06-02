@@ -1,5 +1,9 @@
 \section{Regular Expressions} \label{sec:RegExp}
 
+In this section, we implement the data type for regular expressions, 
+as well as some useful functions for matching and simplyfing,
+and define an \texttt{Arbitrary} instance for our data type to generate random regular expressions for our test suite.
+
 \begin{definition}
     Fix an alphabet $\Sigma$. We say that $R$ is \emph{regular expression} over $\Sigma$ if:
     \begin{enumerate}[(i)]
@@ -131,7 +135,7 @@ simplify re -- repeatedly apply the one-step simplify function until a fixed poi
             _ -> Star (oneStepSimplify re')
 \end{code}
 
-Finally, we implement a way to generate random regular expressions using QuickCheck. xw
+Finally, we implement a way to generate random regular expressions using QuickCheck.
 We try to keep their size relatively small so that 
 testing that converting back and forth from regular expressions to NFAs does not take too long.
 

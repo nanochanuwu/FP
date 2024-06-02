@@ -1,9 +1,7 @@
 \section{Conclusion}\label{sec:Conclusion}
 
-\section{Conclusion}\label{sec
-}
-
-In this project, we have implemented data types for regular expressions, deterministic automata, and non-deterministic automata. Using these, we demonstrated important results in automata theory: the expressive equivalence between regular languages, NFAs, and DFAs.
+In this project, we have implemented data types for regular expressions, deterministic automata, and non-deterministic automata. 
+Using these, we demonstrated important results in automata theory: the expressive equivalence between regular languages, NFAs, and DFAs.
 
 Haskell's type system and the Maybe monad allowed us to effectively model partial functions by using Maybe states to map arguments that have no value specified, meaning no transition for some symbols, to a dummy state. The only downside is that the models are a bit more complicated to write because one has to use the \texttt{maybeMap}. Here, one could add a a translation function that transforms a given input list to function of the right type. 
 Using the Maybe type for symbols allowed us to separately treat the $\epsilon$-transitions for NFAs by singling out an object in a non-specified type to work as $\epsilon$. 

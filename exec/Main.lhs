@@ -1,5 +1,7 @@
 \section{A playground for finite automata and regular expressions} \label{sec:Main}
 
+Here, we manually define a simple DFA and a simple NFA to show some of the most important parts of our code.
+
 \begin{code}
 module Main where
 
@@ -29,8 +31,12 @@ testNFA = NFA [1,2,3]
               )  
               1 
               [2]
+\end{code}
 
+It is easy to see that \texttt{testDFA} accepts the language $a^* b^*$,
+while \texttt{testNFA} accepts all the strings over the alphabet $\{a,b\}$.
 
+\begin{code}
 main :: IO ()
 main = do
   putStrLn "\nWelcome to our demo! \n"
@@ -48,12 +54,7 @@ main = do
   -- putStrLn $ printDFA $ nfaToDfa $ regexToNfa $ (simplify . nfaToReg) testNFA
 \end{code}
 
-% We can run this program with the commands:
-
-% \begin{verbatim}
-% stack build
-% stack exec myprogram
-% \end{verbatim}
+We can run this program with the commands \texttt{stack build && stack exec myprogram}.
 
 % The output of the program is something like this:
 

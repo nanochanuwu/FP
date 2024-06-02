@@ -1,5 +1,6 @@
 \section{DFAs and NFAs} \label{sec:DfaAndNfa}
-In this section we will define the data types DFA and NFA
+
+In this section we will define the data types DFA and NFA.
 
 \subsection{Mathematical Definition and Haskell Implementation}
 
@@ -70,6 +71,7 @@ from \texttt{Maybe} within the functions that require these conversions themselv
 Below we detail the implementation of ancilliary functions and instance declarations for the DFA and NFA data types.
 
 \subsection{Functions for DFAs and NFAs}
+
 \subsubsection*{Evaluate DFA and NFA}
 Below we define the function \texttt{evaluateDFA}, implemented from \cite{sipser2012}.
 
@@ -92,8 +94,9 @@ The \texttt{evaluateDFA} function takes a specific DFA and checks whether the DF
 It does so by walking along the DFA  according to the symbols in the list (by means of the \texttt{walkDFA} helper function) and checks whether the state it ends at is one of the final states of the DFA.
 Due to our use of the \texttt{`elem`} function, our \texttt{evaluateDFA} function has an equality constraint on the symbol type.
 
-Next we implement the same function for NFAs, the \texttt{eveluateNFA} function (implemented from \cite{sipser2012}). In this function we will have to consider the $\varepsilon$-closure for certain states, so we first define two functions called 
-\texttt{epsilonClosure} and \textt{epsilonClosureSet}. These functions will also figure in the conversion of NFAs to DFAs later on.
+Next we implement the same function for NFAs, the \texttt{eveluateNFA} function (implemented from \cite{sipser2012}). 
+In this function we will have to consider the $\varepsilon$-closure for certain states, so we first define two functions called 
+\texttt{epsilonClosure} and \texttt{epsilonClosureSet}. These functions will also figure in the conversion of NFAs to DFAs later on.
 
 \begin{code}
 epsilonClosure :: forall state symbol . Eq state => NFA state symbol -> state -> [state]
@@ -103,8 +106,9 @@ epsilonClosure nfa x = closing [] [x] where
                                     list of states once the function has gone through all the states it needs to close. -} 
     closing visited (y:ys)
         | y `elem` visited = closing visited ys -- If y has already been visited we move on
-        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing)) {- otherwise we add y to the visited states and add all its 
-                                                                                      epsilon related states to the yet to close list and recur the closing. -}
+        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing))  
+        -- otherwise we add y to the visited states and add all its 
+        -- epsilon related states to the yet to close list and recur the closing.
 
 epsilonClosureSet :: Eq state => NFA state symbol -> [state] -> [state]
 epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
@@ -113,13 +117,14 @@ evaluateNFA :: forall state symbol . Eq state => NFA state symbol -> [symbol] ->
 evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
     walkNFA :: [state] -> [symbol] -> [state]
     walkNFA states [] = epsilonClosureSet nfa states -- base case for the empty list of symbols, returns the epsilon-reachable states from the current set of states.
-    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where {- recursively takes the epsilon-closure of the current set and finds all the s-reachable states from those 
-                                                                                            and feeds it back into the walkNFA function. -}
+    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where  
+        -- recursively takes the epsilon-closure of the current set and finds all the s-reachable states from those 
+        -- and feeds it back into the walkNFA function.
         transition q = transitionNFA nfa (q, Just s) -- helper function for readability.
         epsilonClosureStates = epsilonClosureSet nfa states
 \end{code}
 
-The \textt{evaluateNFA} function is quite similar to the \texttt{evaluateDFA} function. There are two notable differences however.
+The \texttt{evaluateNFA} function is quite similar to the \texttt{evaluateDFA} function. There are two notable differences however.
 
 First, because the \texttt{transitionNFA} function does not return \texttt{Maybe state}, but rather \texttt{[state]}, we do not have to distinguish cases. Second, the \texttt{evaluateNFA} function first takes 
 the $\varepsilon$-closure of the current set of states before finding all the states that are reachable from each of those states by the corresponding symbol-transition. The \texttt{epsilonClosure} function  
@@ -221,7 +226,7 @@ instance (Show state, Show symbol) => Show (NFA state symbol) where
 \end{code}
 
 Here too we generate a lookup table containing all the possible transitions we can make from any given state. We ensure that \texttt{transitionNFA} is a valid Haskell function by prepending 
-"\texttt{fromMaybe [] \text{$} lookup }" to the table. The function will then return \texttt{s} if the \texttt{lookup} function returns \texttt{Just s}, for some state s, and returning the 
+"\texttt{fromMaybe [] \$ lookup }" to the table. The function will then return \texttt{s} if the \texttt{lookup} function returns \texttt{Just s}, for some state s, and returning the 
 empty list (\texttt{[]}) if the lookup function returns Nothing.
 
 \subsubsection*{Instance Arbitrary DFA and NFA}
@@ -255,7 +260,8 @@ instance (Arbitrary state, Arbitrary symbol, Eq state, Eq symbol, Num state, Ord
                 return $ \(state, symbol) -> lookup (state, symbol) transitionTable 
 \end{code}
 
-For each of the arguments of the DFA constructor we define how to arbitraryly generate the right value. For the states we generate a non-empty list of the state type of the DFA. For the alphabet we generate a list of length 2 of unique values.
+For each of the arguments of the DFA constructor we define how to arbitraryly generate the right value. 
+For the states we generate a non-empty list of the state type of the DFA. For the alphabet we generate a list of length 2 of unique values.
 
 \begin{code}
 instance (Arbitrary symbol, Eq symbol) => Arbitrary (NFA Int symbol) where
