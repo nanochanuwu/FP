@@ -82,8 +82,8 @@ Below we define the function \texttt{evaluateDFA}, implemented from \cite{sipser
 evaluateDFA :: forall state symbol . Eq state => DFA state symbol -> [symbol] -> Bool
 evaluateDFA dfa syms = case walkDFA (Just $ beginDFA dfa) syms of
     Nothing -> False -- If walkDFA returns Nothing at any point, evaluateDFA returns False
-    Just s -> s `elem` finalDFA dfa   {- Otherwise, if walkDFA can make a transition for each symbol in the string, 
-                                         evaluateDFA checks whether the state it walked to is a sate in the list of final states. -}
+    Just s -> s `elem` finalDFA dfa   -- Otherwise, if walkDFA can make a transition for each symbol in the string, 
+                                      -- evaluateDFA checks whether the state it walked to is a sate in the list of final states.
     where -- helper function to handle the Maybe's
         walkDFA :: Maybe state -> [symbol] -> Maybe state
         walkDFA Nothing _ = Nothing 
@@ -98,18 +98,18 @@ It does so by walking along the DFA  according to the symbols in the list (by me
 Due to our use of the \texttt{`elem`} function, our \texttt{evaluateDFA} function has an equality constraint on the symbol type.
 
 Next, we implement the same function for NFAs, the \texttt{eveluateNFA} function (implemented from \cite{sipser2012}). In this function we will have to consider the $\varepsilon$-closure for certain states, so we first define two functions called 
-\texttt{epsilonClosure} and \textt{epsilonClosureSet}. These functions will also figure in the conversion of NFAs to DFAs later on.
+\texttt{epsilonClosure} and \texttt{epsilonClosureSet}. These functions will also figure in the conversion of NFAs to DFAs later on.
 
 \begin{code}
 epsilonClosure :: forall state symbol . Eq state => NFA state symbol -> state -> [state]
 epsilonClosure nfa x = closing [] [x] where
     closing :: [state] -> [state] -> [state]
-    closing visited [] = visited {- visited acts as an accumulator which will be returned as the epsilon closed 
-                                    list of states once the function has gone through all the states it needs to close. -} 
+    closing visited [] = visited -- visited acts as an accumulator which will be returned as the epsilon closed 
+                                 -- list of states once the function has gone through all the states it needs to close.
     closing visited (y:ys)
         | y `elem` visited = closing visited ys -- If y has already been visited we move on
-        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing)) {- otherwise we add y to the visited states and add all its 
-                                                                                      epsilon related states to the yet to close list and recur the closing. -}
+        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing)) -- otherwise we add y to the visited states and add all its 
+                                                                                   -- epsilon related states to the yet to close list and recur the closing.
 
 epsilonClosureSet :: Eq state => NFA state symbol -> [state] -> [state]
 epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
@@ -118,13 +118,13 @@ evaluateNFA :: forall state symbol . Eq state => NFA state symbol -> [symbol] ->
 evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
     walkNFA :: [state] -> [symbol] -> [state]
     walkNFA states [] = epsilonClosureSet nfa states -- base case for the empty list of symbols, returns the epsilon-reachable states from the current set of states.
-    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where {- recursively takes the epsilon-closure of the current set and finds all the s-reachable states from those 
-                                                                                            and feeds it back into the walkNFA function. -}
+    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where  -- recursively takes the epsilon-closure of the current set and finds all the s-reachable states from those 
+                                                                                          -- and feeds it back into the walkNFA function.
         transition q = transitionNFA nfa (q, Just s) -- helper function for readability.
         epsilonClosureStates = epsilonClosureSet nfa states
 \end{code}
 
-The \textt{evaluateNFA} function is quite similar to the \texttt{evaluateDFA} function. There are two notable differences, however.
+The \texttt{evaluateNFA} function is quite similar to the \texttt{evaluateDFA} function. There are two notable differences, however.
 
 First, because the \texttt{transitionNFA} function does not return \texttt{Maybe state}, but rather \texttt{[state]}, we do not have to distinguish cases. 
 
@@ -233,7 +233,7 @@ instance (Show state, Show symbol) => Show (NFA state symbol) where
 \end{code}
 
 Here too we generate a lookup table containing all the possible transitions we can make from any given state. We ensure that \texttt{transitionNFA} is a valid Haskell function by prepending 
-"\texttt{fromMaybe [] \text{$} lookup }" to the table. The function will then return \texttt{s} if the \texttt{lookup} function returns \texttt{Just s}, for some state s, and returning the 
+"\texttt{fromMaybe [] \$ lookup }" to the table. The function will then return \texttt{s} if the \texttt{lookup} function returns \texttt{Just s}, for some state s, and returning the 
 empty list (\texttt{[]}) if the lookup function returns Nothing.
 
 \subsubsection*{Instance Arbitrary DFA and NFA}
@@ -312,7 +312,7 @@ where too large of a list of states might make it so that our test-suite takes t
 
 Second, during the generation of the lookup table for the transition function the list of symbols to construct the \texttt{(state, symbol)} tuple is generated from a 1 to 10 distribution of occurrences of Nothing (representing the
 $\varepsilon$-transitions) and 9 to 10 occurrences of elements in the alphabet. In this process also, rather than generating a list of single elements from the list of states, we generate a list of subsets of the list of states
-as target values for the \texttt{(state, symbol)} to be mapped to. This way the function \texttt{(state, symbol) -> fromMaybe [] \text{$} lookup (state, symbol) transitionTable} returns a subset of the list of states.
+as target values for the \texttt{(state, symbol)} to be mapped to. This way the function \texttt{(state, symbol) -> fromMaybe [] \$ lookup (state, symbol) transitionTable} returns a subset of the list of states.
 
 For the same reason as with the implementation of \texttt{instance Arbitrary DFA}, our implementation of \texttt{instance Arbitrary NFA} also has the \texttt{Eq} type constraint for both the NFA \texttt{state} type and \texttt{symbol} type.
 
