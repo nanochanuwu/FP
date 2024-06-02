@@ -17,7 +17,7 @@ import RegToNfa (regexToNfa)
 }
 
 \begin{code}
-testDFA :: DFA Int Char -- this accepts the language (a*)(b*)
+testDFA :: DFA Int Char -- this accepts the language (a*)b
 testDFA = DFA [1,2] 
               "ab" 
               (`lookup` [((1,'a'), 1), ((1,'b'), 2)])
@@ -37,7 +37,7 @@ testNFA = NFA [1,2,3]
               [2]
 \end{code}
 
-It is easy to see that \texttt{testDFA} accepts the language $a^* b^*$,
+It is easy to see that \texttt{testDFA} accepts the language $a^* b$,
 while \texttt{testNFA} accepts all the strings over the alphabet $\{a,b\}$.
 
 \begin{code}

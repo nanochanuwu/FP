@@ -1,16 +1,34 @@
 \section{Conclusion}\label{sec:Conclusion}
 
 In this project, we have implemented data types for regular expressions, deterministic automata, and non-deterministic automata. 
-Using these, we demonstrated important results in automata theory: the expressive equivalence between regular languages, NFAs, and DFAs.
+Using these, we implemented the constructions that are used to prove important results in automata theory: 
+the expressive equivalence between regular languages, NFAs, and DFAs.
 
-Haskell's type system and the Maybe monad allowed us to effectively model partial functions by using Maybe states to map arguments that have no value specified, meaning no transition for some symbols, to a dummy state. The only downside is that the models are a bit more complicated to write because one has to use the \texttt{maybeMap}. Here, one could add a a translation function that transforms a given input list to function of the right type. 
-Using the Maybe type for symbols allowed us to separately treat the $\epsilon$-transitions for NFAs by singling out an object in a non-specified type to work as $\epsilon$. 
+Haskell's type system and the \texttt{Maybe} monad allowed us to effectively model partial transition functions for DFAs by using \texttt{Maybe state} to map arguments that have no value specified, 
+meaning no transition for some symbols, to a dummy \enquote{garbage} state. 
+The only downside is that the models are a bit more complicated to write, and the code for \texttt{evaluateDFA} is slightly more complicated,
+which we think is an acceptable trade-off.
+Here, one could add a a translation function that transforms a given input list to a function of the right type. 
+As for NFAs, using the \texttt{Maybe} type for symbols allowed us to separately treat the $\varepsilon$-transitions for NFAs 
+by singling out an object in a non-specified type to work as $\varepsilon$. 
 
-Currently, the NFA to DFA translation is split into two parts: first, we translate the DFA using the powerset construction and then minimize it. By producing the minimized DFA on-the-fly and generating only the states we can transition to without computing the entire power set, we could the efficiency of the translation.
+Currently, the NFA to DFA translation is split into two parts: 
+first, we translate the DFA using the powerset construction, and then minimize it. 
+By producing the minimized DFA on-the-fly and generating only the states we can transition to without computing the entire power set, 
+we could improve the efficiency of the translation.
 
-Something on REGEX
+As for translating from regular expressions to NFAs, this was straightforward: \enquote{glue} together the recursively generated NFAs
+while keeping track of fresh state labels to use for new states, using \texttt{Int} as our state type.
+In contrast, the other direction was much trickier, requiring the constraint of \texttt{Int}-labeled states for the helper function \texttt{r k i j} 
+defining all \texttt{k}-bounded paths from \texttt{i} to \texttt{j}. 
+Thus, our translations between regular expressions and NFAs are both limited to the case where states are labled with \texttt{Int}.
+We believe this is again an acceptable trade-off to have simpler code, as the type used for states only acts as a labelling scheme for states in our functions.
+If however in the future we wished to extend this to NFAs with other state labels,
+we could write simple coercions between arbitrary and \texttt{Int} labels and work \enquote{under the hood} solely with the \texttt{Int} labels.
 
-Tests show that the algorithms work in many cases, but due to the inefficiency of some of the algorithms, such as the translation from NfaToReg, we cannot test for long expressions. 
+Our test suite shows that the algorithms work in many cases, 
+but due to the inefficiency of some of the algorithms, such as the translation \texttt{nfaToReg}, 
+we cannot test for long expressions. 
 
 
 
