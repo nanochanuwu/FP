@@ -108,8 +108,9 @@ epsilonClosure nfa x = closing [] [x] where
                                  -- list of states once the function has gone through all the states it needs to close.
     closing visited (y:ys)
         | y `elem` visited = closing visited ys -- If y has already been visited we move on
-        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing)) -- otherwise we add y to the visited states and add all its 
-                                                                                   -- epsilon related states to the yet to close list and recur the closing.
+        | otherwise = closing (y : visited) (ys ++ transitionNFA nfa (y, Nothing)) 
+        -- otherwise we add y to the visited states and add all its 
+        -- epsilon related states to the yet to close list and recur the closing.
 
 epsilonClosureSet :: Eq state => NFA state symbol -> [state] -> [state]
 epsilonClosureSet nfa = concatMap (epsilonClosure nfa)
@@ -118,8 +119,9 @@ evaluateNFA :: forall state symbol . Eq state => NFA state symbol -> [symbol] ->
 evaluateNFA nfa syms = any (`elem` finalNFA nfa) (walkNFA [beginNFA nfa] syms) where
     walkNFA :: [state] -> [symbol] -> [state]
     walkNFA states [] = epsilonClosureSet nfa states -- base case for the empty list of symbols, returns the epsilon-reachable states from the current set of states.
-    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where  -- recursively takes the epsilon-closure of the current set and finds all the s-reachable states from those 
-                                                                                          -- and feeds it back into the walkNFA function.
+    walkNFA states (s:ss) = walkNFA (concatMap transition epsilonClosureStates) ss where  
+    -- recursively takes the epsilon-closure of the current set and finds all the s-reachable states from those 
+    -- and feeds it back into the walkNFA function.
         transition q = transitionNFA nfa (q, Just s) -- helper function for readability.
         epsilonClosureStates = epsilonClosureSet nfa states
 \end{code}
@@ -307,7 +309,7 @@ instance (Arbitrary symbol, Eq symbol) => Arbitrary (NFA Int symbol) where
 As you can see, the implementation for \texttt{instance Arbitrary NFA} is quite similar to that for DFA. There are two main differences.
 
 First, rather than generating a list of states of an arbitrary type that scales with the complexity of the tests, here we generate a list of states that is constrained to the \texttt{Int} type and is limited to a maximum length of 5. 
-The first constraint is due to the fact that our \textttt{nfaToReg} function (which we will detail later), only works on states of the integer type. The second constraint is to limit the complexity of the test cases, 
+The first constraint is due to the fact that our \texttt{nfaToReg} function (which we will detail later), only works on states of the integer type. The second constraint is to limit the complexity of the test cases, 
 where too large of a list of states might make it so that our test-suite takes too long to complete all of its tests. 
 
 Second, during the generation of the lookup table for the transition function the list of symbols to construct the \texttt{(state, symbol)} tuple is generated from a 1 to 10 distribution of occurrences of Nothing (representing the
