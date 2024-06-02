@@ -20,6 +20,9 @@ executables:
     source-dirs: exec
     dependencies:
       - FP
+    when:
+    - condition: false
+      other-modules: Paths_FP 
 
 tests:
   tests:
