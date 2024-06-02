@@ -1,6 +1,7 @@
-\section{A playground for finite automata and regular expressions} \label{sec:Main}
+\section{A playground for finite automata and regular expressions} \label{sec:executable}
 
 Here, we manually define a simple DFA and a simple NFA to show some of the most important parts of our code.
+
 
 \begin{code}
 module Main where
@@ -54,7 +55,7 @@ main = do
   -- putStrLn $ printDFA $ nfaToDfa $ regexToNfa $ (simplify . nfaToReg) testNFA
 \end{code}
 
-We can run this program with the commands \texttt{stack build && stack exec myprogram}.
+We can run this program with the commands \texttt{stack build \&\& stack exec myprogram}.
 
 % The output of the program is something like this:
 

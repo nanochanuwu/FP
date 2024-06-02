@@ -5,7 +5,8 @@
 \title{Finite automata and regular expressions in Haskell}
 \author{N. Batistoni, M. L\"ursen, P. Fink, J. Sorkin}
 \date{\today}
-\hypersetup{pdfauthor={Me}, pdftitle={My Report}}
+\hypersetup{pdfauthor={N. Batistoni, M. L\"ursen, P. Fink, J. Sorkin}, 
+    pdftitle={Finite automata and regular expressions in Haskell}}
 
 \begin{document}
 
@@ -21,14 +22,13 @@
 
 \vfill
 
+\setcounter{tocdepth}{1}
 \tableofcontents
 
 \clearpage
 
-% We include one file for each section. The ones containing code should
-% be called something.lhs and also mentioned in the .cabal file.
 
-% \input{Howto.tex}
+\input{tex/Introduction.tex}
 
 \input{lib/DfaAndNfa.lhs}
 
@@ -42,9 +42,9 @@
 
 \input{lib/NfaToReg.lhs}
 
-% \input{exec/Main.lhs}
-
 \input{test/tests.lhs}
+
+\input{exec/Main.lhs}
 
 \input{tex/Conclusion.tex}
 

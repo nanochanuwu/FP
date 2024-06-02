@@ -52,7 +52,7 @@ main = hspec $ do
                                 ==> evaluateDFA dfa s == evaluateDFA (removeUnreachableStates dfa) s
 \end{code}
 
-To run the tests, use \verb|stack test|.
+% To run the tests, use \verb|stack test|.
 
 % To also find out which part of your program is actually used for these tests,
 % run \verb|stack clean && stack test --coverage|. Then look for ``The coverage

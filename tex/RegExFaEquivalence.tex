@@ -6,7 +6,10 @@ In this section, our goal is to implement the constructive proof of Theorem 1.54
     A language is regular if and only if it is described by a regular expression.
 \end{theorem}
 
-In \S~\ref{subsec:RegToNfa}, we implement the construction of an NFA from a regular expression 
-which shows that if a language is described by a regular expression, then it is regular.
+Using the fact that DFAs have the same expressive power as NFAs, we will implement conversions
+from regular expressions to NFAs and back.
+In particular, in \S~\ref{subsec:RegToNfa}, we implement the construction of an NFA from a regular expression 
+which can be used to formally prove that if a language is described by a regular expression, then it is regular.
 Next, in \S~\ref{subsec:NfaToReg}, we implement the construction of a regular expression from a given NFA
-that shows that if a language is regular, then it is described by a regular expression.
+via Kleene's algorithm,
+which shows that if a language is regular, then it is described by a regular expression.

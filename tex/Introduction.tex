@@ -1,0 +1,22 @@
+For this project, we have set three main goals: 
+first, implement data types for deterministic and non-deterministic finite automata, as well as for regular expressions,
+while mainting as much generality as possible;
+second, implement conversions between them that preserve the language that they describe;
+third, test our construction using arbitrarily generated inputs.
+Regular languages are defined as those accepted by a deterministic finite automaton
+- if we look at the bigger picture, then, our goal is to implement the constructions
+that are used to prove that DFAs, NFAs and regular expressions have the same expressive power
+in describing regular languages. 
+More specifically, we mostly follow Chapter 1 of~\cite{sipser2012}.
+
+Our report is structured as follows.
+In Section~\ref{sec:DfaAndNfa}, we provide an implementation of data types for DFAs and NFAs
+and we implement the powerset construction, 
+which can be used to prove that DFAs have the same expressive power as NFAs.
+Next, in Section~\ref{sec:RegExp}, we implement the data type for regular expressions.
+In Section~\ref{sec:equivalence_regex_fa}, we implement the conversions from regular expressions to NFAs
+and from NFAs to regular expressions,
+which are used to show that regular expressions also describe regular languages.
+In Section~\ref{sec:tests}, we describe our test suite.
+Finally, we provide a small demo in Section~\ref{sec:executable},
+and draw some conclusions in Section~\ref{sec:Conclusion}.
