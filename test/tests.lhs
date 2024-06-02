@@ -16,6 +16,7 @@ Finally, it is worth noting that we often had to limit the size of our arbitrari
 so that our test suite would not take too long to execute. 
 These limits were simply set through several test runs.
 
+\hide{
 \begin{code}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -30,7 +31,10 @@ import NfaToDfa (nfaToDfa, removeUnreachableStates)
 import Test.Hspec ( hspec, describe )
 import Test.Hspec.QuickCheck( prop )
 import Test.QuickCheck ( (==>) )
+\end{code}
+}
 
+\begin{code}
 main :: IO ()
 main = hspec $ do
   describe "Regular languages: finite automata and regular expressions" $ do

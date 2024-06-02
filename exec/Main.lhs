@@ -2,7 +2,7 @@
 
 Here, we manually define a simple DFA and a simple NFA to show some of the most important parts of our code.
 
-
+\hide{
 \begin{code}
 module Main where
 
@@ -13,7 +13,10 @@ import NfaToReg (nfaToReg)
 
 import Data.Maybe (fromMaybe)
 import RegToNfa (regexToNfa)
+\end{code}
+}
 
+\begin{code}
 testDFA :: DFA Int Char -- this accepts the language (a*)(b*)
 testDFA = DFA [1,2] 
               "ab" 
