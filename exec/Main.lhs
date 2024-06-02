@@ -3,9 +3,49 @@
 \begin{code}
 module Main where
 
+import DfaAndNfa ( DFA(DFA), NFA(NFA), printDFA, printNFA )
+import NfaToDfa (nfaToDfa, removeUnreachableStates)
+import RegExp ( simplify, printRE )
+import NfaToReg (nfaToReg)
+
+import Data.Maybe (fromMaybe)
+import RegToNfa (regexToNfa)
+
+testDFA :: DFA Int Char -- this accepts the language (a*)(b*)
+testDFA = DFA [1,2] 
+              "ab" 
+              (`lookup` [((1,'a'), 1), ((1,'b'), 2)])
+              1
+              [2]
+                
+testNFA :: NFA Int Char -- this accepts all the strings over {a,b}
+testNFA = NFA [1,2,3] 
+              "ab" 
+              (\(st,sy) -> fromMaybe [] $ lookup (st,sy) 
+                  [ ((1, Just 'a'), [1]), ((1, Just 'b'), [1,2])
+                  , ((1, Nothing), [2]), ((2, Just 'a'), [2])
+                  , ((2,Just 'b'), [2]), ((2, Nothing), [3])
+                  , ((3, Just 'a'), [2]), ((3, Nothing), [1])]
+              )  
+              1 
+              [2]
+
+
 main :: IO ()
 main = do
-  putStrLn "Hello!"
+  putStrLn "\nWelcome to our demo! \n"
+  putStrLn "--- test DFA ---"
+  putStrLn $ printDFA testDFA
+  putStrLn "--- testNFA ---"
+  putStrLn $ printNFA testNFA
+  putStrLn "--- testNFA to DFA ---"
+  putStrLn $ printDFA $ (removeUnreachableStates . nfaToDfa) testNFA
+  putStrLn "--- testNFA to regex ---"
+  putStrLn $ printRE $ (simplify . nfaToReg) testNFA
+  putStrLn "--- testNFA to regex and back ---"                                      -- note that this is quite large already!
+  putStrLn $ printNFA $ regexToNfa $ (simplify . nfaToReg) testNFA
+  -- putStrLn "--- testNFA to regex and back and to DFA ---"                        -- this might take VERY long
+  -- putStrLn $ printDFA $ nfaToDfa $ regexToNfa $ (simplify . nfaToReg) testNFA
 \end{code}
 
 % We can run this program with the commands:
