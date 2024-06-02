@@ -38,7 +38,7 @@ from \texttt{Maybe} within the functions that require these conversions themselv
 
 module DfaAndNfa where
 
-import Data.Maybe ( fromMaybe )
+import Data.Maybe ( fromMaybe, fromJust, isJust )
 import Test.QuickCheck( Arbitrary(arbitrary), Gen, elements, frequency, listOf1, sublistOf, suchThat, vectorOf, chooseInt )
 
 data DFA state symbol = DFA
@@ -56,28 +56,6 @@ data NFA state symbol = NFA
                     , beginNFA :: state
                     , finalNFA :: [state]
                     }
-
--- Dummy DFA for testing purposes
-testDFA :: DFA Integer Char
-testDFA = DFA   [1,2] 
-                "ab" 
-                (`lookup` [((1,'a'), 1), ((1,'b'), 2)])
-                1
-                [2]
-                
--- Dummy NFA for testing purposes
-testNFA :: NFA Integer Char
-testNFA = NFA   [1,2,3] 
-                "ab" 
-                (\(st,sy) -> fromMaybe [] $ lookup (st,sy) 
-                    [ ((1, Just 'a'), [1]), ((1, Just 'b'), [1,2])
-                    , ((1, Nothing), [2]), ((2, Just 'a'), [2])
-                    , ((2,Just 'b'), [2]), ((2, Nothing), [3])
-                    , ((3, Just 'a'), [2]), ((3, Nothing), [1])]
-                )  
-                1 
-                [2]
-
 \end{code}
 
 Documentation here
@@ -180,7 +158,7 @@ printDFA (DFA states alphabet transition begin final) =
   where
     showTransition ((state, sym), nextState) =
         show state ++ " -- " ++ show sym ++ " --> " ++ show nextState
-    allTransitions = [((state, sym), transition (state, sym)) | state <- states, sym <- alphabet ]
+    allTransitions = [((state, sym), fromJust $ transition (state, sym)) | state <- states, sym <- alphabet, isJust $ transition (state, sym) ]
 
 printNFA :: (Show state, Show symbol) => NFA state symbol -> String
 printNFA (NFA states alphabet transition begin final) =
